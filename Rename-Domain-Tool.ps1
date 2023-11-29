@@ -121,8 +121,6 @@ $okButton.Add_Click({
         # Simulate a progress bar
         $progressBar.Value = 0
 
-        Start-Transcript -Path "$PSScriptRoot\Rename-Domain.log" -Force
-        
         # New DNS zone
         Add-DnsServerPrimaryZone -Name $newDomainName -ReplicationScope "Domain" –PassThru
 
@@ -173,16 +171,10 @@ $okButton.Add_Click({
         "Continue" | Out-File -FilePath $markerFilePath -Force
         # Restart the computer
         Restart-Computer -Force
-        # Check if the marker file exists after the restart
-        if (Test-Path $markerFilePath) {
-            # The marker file exists, indicating that the script is running after the restart
-            Remove-Item -Path $markerFilePath -Force
-            Start-Process "$rendomPath" -ArgumentList " /clean"
-            Start-Process "$rendomPath" -ArgumentList " /end"
-            Start-Process "$env:SystemRoot\System32\dsa.msc"
-            $progressBar.Value = 100
-            Stop-Transcript 
-        }
+        Start-Process "$rendomPath" -ArgumentList " /clean"
+        Start-Process "$rendomPath" -ArgumentList " /end"
+        Start-Process "$env:SystemRoot\System32\dsa.msc"
+        $progressBar.Value = 100
                
     } elseif (($newDomainName -eq $null) -or ($newDomainName -eq "")) {
         $Form1.Controls.Remove($labelResult0)
