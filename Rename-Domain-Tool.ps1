@@ -166,15 +166,9 @@ $okButton.Add_Click({
         $labelResult1.Text = "Domain name changed successfully (RESTART IN 10s), wait 25 seconds after login."
         $Form1.Controls.Add($labelResult1)
         Start-Sleep 10
-        # Create a marker file to indicate that the script should continue after restart
-        $markerFilePath = Join-Path $env:TEMP "DomainRenameMarker.txt"
-        "Continue" | Out-File -FilePath $markerFilePath -Force
+        $progressBar.Value = 100
         # Restart the computer
         Restart-Computer -Force
-        Start-Process "$rendomPath" -ArgumentList " /clean"
-        Start-Process "$rendomPath" -ArgumentList " /end"
-        Start-Process "$env:SystemRoot\System32\dsa.msc"
-        $progressBar.Value = 100
                
     } elseif (($newDomainName -eq $null) -or ($newDomainName -eq "")) {
         $Form1.Controls.Remove($labelResult0)
