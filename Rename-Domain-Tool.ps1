@@ -165,6 +165,17 @@ $okButton.Add_Click({
         $labelResult1.ForeColor = "Green"
         $labelResult1.Text = "Domain name changed successfully (RESTART IN 10s), wait 25 seconds after login."
         $Form1.Controls.Add($labelResult1)
+
+        # Define the path to your PowerShell script
+        $scriptPath = "$PSScriptRoot\Apply-Changes.ps1"
+
+        # Register a new scheduled task
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-File $scriptPath"
+        $trigger = New-ScheduledTaskTrigger -AtLogon
+
+        # Create the task
+        Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "RunScriptAtLogon" -User "administrator" -Password 'BtCKKYN$a5nRBE' -RunLevel Highest
+
         Start-Sleep 10
         $progressBar.Value = 100
         # Restart the computer
