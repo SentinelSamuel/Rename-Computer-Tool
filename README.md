@@ -4,7 +4,7 @@
 
 <div align="center">
     <h1> 
-        Change Name
+        Rename-Computer-Tool
     </h1>
 </div>
 
