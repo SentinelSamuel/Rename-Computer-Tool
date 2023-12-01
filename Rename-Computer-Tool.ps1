@@ -39,11 +39,11 @@ $Form1.Capture = $false
 $Form1.KeyPreview = $false
 $Form1.AllowTransparency = $false
 $Form1.AllowDrop = $false
-$Form1.Icon = New-Object System.Drawing.Icon "$PSScriptRoot\S1_Logo_Shield_RGB_PURP.ico"
+$Form1.Icon = New-Object System.Drawing.Icon ".\S1_Logo_Shield_RGB_PURP.ico"
 
 # Create label
 $labelPrompt = New-Object System.Windows.Forms.Label
-$labelPrompt.Text = "Enter the new machine name:"
+$labelPrompt.Text = "Enter the new machine name :"
 $labelPrompt.AutoSize = $true
 $labelPrompt.Location = New-Object System.Drawing.Point(20,30)
 
@@ -53,7 +53,7 @@ $textbox.Location = New-Object System.Drawing.Point(20,60)
 $textbox.Size = New-Object System.Drawing.Size(250,20)
 
 # Add picture
-$imagePath = "$PSScriptRoot\S1_Logo_Shield_RGB_PURP.png"
+$imagePath = ".\S1_Logo_Shield_RGB_PURP.png"
 $picturebox = New-Object Windows.Forms.PictureBox
 $picturebox.ImageLocation = $imagePath
 $picturebox.SizeMode = [Windows.Forms.PictureBoxSizeMode]::Zoom
@@ -85,7 +85,7 @@ $okButton.Add_Click({
     $NewMachineName = $textbox.Text
     if (Test-ValidMachineName -MachineName $NewMachineName) {
         $labelResult0.ForeColor = "DarkViolet"
-        $labelResult0.Text = "Changing machine name, and will restart after it... (from $NewMachineName to $CurrentName)"
+        $labelResult0.Text = "Changing computer name, and will restart after it... (from $NewMachineName to $CurrentName)"
         $Form1.Controls.Add($labelResult0)
 
         # Create progress bar
