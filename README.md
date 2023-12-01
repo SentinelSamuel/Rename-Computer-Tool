@@ -12,6 +12,7 @@
 ```
 - Extract files
 - Double click on Rename-Computer-Tool.exe
+(Pictures and icon are already empackaged in the .exe file) 
 ```
 ### 2) The initial source code of the exe is the .ps1 file 
 
