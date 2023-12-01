@@ -1,44 +1,23 @@
+function Test-ValidMachineName {
+    param (
+        [string]$MachineName
+    )
+
+    # Define the regex pattern for a valid machine name
+    $machineNameRegex = "^[a-zA-Z0-9-]+$"
+
+    # Check if the input string matches the regex pattern
+    if ($MachineName -match $machineNameRegex) {
+        return $true
+    } else {
+        return $false
+    }
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 
-# Function to get the current domain name
-function Get-CurrentDomainName {
-    try {
-        $currentDomain = (Get-WmiObject Win32_ComputerSystem).Domain
-        return $currentDomain
-    } catch {
-        throw "Failed to retrieve the current domain name. Error: $_"
-    }
-}
-function Compare-Domain {
-    param (
-        [string]$DomainName
-    )
-
-    # Define the regex pattern for a domain name
-    $domainRegex = "^[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$"
-
-    # Compare the input string to the regex pattern
-    if ($DomainName -match $domainRegex) {
-        return $True
-    } else {
-        return $False
-    }
-}
-function Convert-ToNetBiosName {
-    param (
-        [string]$domainName
-    )
-
-    # Remove invalid characters from the domain name
-    $cleanedName = $domainName -replace '[^a-zA-Z0-9]', ''
-
-    # Ensure the length does not exceed NetBIOS limit (15 characters)
-    $netBiosName = $cleanedName.Substring(0, [Math]::Min(15, $cleanedName.Length))
-
-    return $netBiosName
-}
 $Form1 = New-Object System.Windows.Forms.Form
-$Form1.Text = " Domain Rename Tool"
+$Form1.Text = " Machine Rename Tool"
 $Form1.Size = New-Object System.Drawing.Size(600,400)
 $Form1.ShowInTaskbar = $false
 $Form1.StartPosition = "CenterScreen"
@@ -64,7 +43,7 @@ $Form1.Icon = New-Object System.Drawing.Icon "$PSScriptRoot\S1_Logo_Shield_RGB_P
 
 # Create label
 $labelPrompt = New-Object System.Windows.Forms.Label
-$labelPrompt.Text = "Enter the new domain name:"
+$labelPrompt.Text = "Enter the new machine name:"
 $labelPrompt.AutoSize = $true
 $labelPrompt.Location = New-Object System.Drawing.Point(20,30)
 
@@ -102,11 +81,11 @@ $okButton.Cursor = [System.Windows.Forms.Cursors]::Hand
 $okButton.Text = "OK"
 $okButton.DialogResult = 0
 $okButton.Add_Click({
-    $current_name = Get-CurrentDomainName
-    $newDomainName = $textbox.Text
-    if (Compare-Domain $newDomainName) {
+    $CurrentName = $env:COMPUTERNAME
+    $NewMachineName = $textbox.Text
+    if (Test-ValidMachineName -MachineName $NewMachineName) {
         $labelResult0.ForeColor = "DarkViolet"
-        $labelResult0.Text = "Changing domain name, and will restart after it... (from $current_name to : $newDomainName)"
+        $labelResult0.Text = "Changing machine name, and will restart after it... (from $NewMachineName to $CurrentName)"
         $Form1.Controls.Add($labelResult0)
 
         # Create progress bar
@@ -120,73 +99,20 @@ $okButton.Add_Click({
 
         # Simulate a progress bar
         $progressBar.Value = 0
-
-        # New DNS zone
-        Add-DnsServerPrimaryZone -Name $newDomainName -ReplicationScope "Domain" –PassThru
-
-        # Define paths to tools
-        $rendomPath = "$env:SystemRoot\System32\rendom.exe"
-        $netdomPath = "$env:SystemRoot\System32\netdom.exe"
-        $gpfixupPath = "$env:SystemRoot\System32\gpfixup.exe"
-
-        $progressBar.Value = 10
-        # Perform a dry run to check for potential issues
-        Set-Location $PSScriptRoot
-        Start-Process "$rendomPath" -ArgumentList " /list"
-        $progressBar.Value = 15
-        Start-Sleep 2
-        $NetBIOS = Convert-ToNetBiosName -domainName $newDomainName
-        $xml_content = Get-Content "$PSScriptRoot\Domainlist.xml"
-        $new_xml_content = $xml_content.Replace($current_name, $newDomainName).Replace('S1',$NetBIOS)
-        $new_xml_content | Set-Content -Path "$PSScriptRoot\Domainlist.xml"
-        Start-Process "$rendomPath" -ArgumentList " /showforest"
-        Start-Sleep 2
-        $progressBar.Value = 25
-        Start-Process "$rendomPath" -ArgumentList " /upload"
-        Start-Sleep 2
-        $progressBar.Value = 40
-        Start-Process "$netdomPath" -ArgumentList " query fsmo"
-        Start-Sleep 2
         $progressBar.Value = 50
-        Start-Process "$rendomPath" -ArgumentList " /prepare"
-        Start-Sleep 2
-        $progressBar.Value = 60
-        Start-Process "$rendomPath" -ArgumentList " /execute"
-        Start-Sleep 2
-        $progressBar.Value = 75
-        Start-Process "$gpfixupPath" -ArgumentList "  /olddns:$current_name /newdns:$newDomainName"
-        Start-Process "$gpfixupPath" -ArgumentList " /oldnb:S1 /newnb:$newDomainName"
-        Start-Sleep 2
-        $progressBar.Value = 85
-        Start-Process "$netdomPath" -ArgumentList " computername $env:COMPUTERNAME.$current_name /add:$env:COMPUTERNAME.$newDomainName"
-        Start-Process "$netdomPath" -ArgumentList " computername $env:COMPUTERNAME.$current_name /makeprimary:$env:COMPUTERNAME.$newDomainName"
-        Start-Sleep 2
-        $progressBar.Value = 95
-        $labelResult1.ForeColor = "Green"
-        $labelResult1.Text = "Domain name changed successfully (RESTART IN 10s), wait 25 seconds after login."
-        $Form1.Controls.Add($labelResult1)
-
-        # Define the path to your PowerShell script
-        $scriptPath = "$PSScriptRoot\Apply-Changes.ps1"
-
-        # Register a new scheduled task
-        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-File $scriptPath"
-        $trigger = New-ScheduledTaskTrigger -AtLogon
-
-        # Create the task
-        Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "RunScriptAtLogon" -User "administrator" -Password 'BtCKKYN$a5nRBE' -RunLevel Highest
-
-        Start-Sleep 10
+        Rename-Computer -NewName $NewMachineName -PassThru -Restart
         $progressBar.Value = 100
-        # Restart the computer
-        Restart-Computer -Force
+        
+        $labelResult1.ForeColor = "Green"
+        $labelResult1.Text = "Machine name changed successfully."
+        $Form1.Controls.Add($labelResult1)
                
-    } elseif (($newDomainName -eq $null) -or ($newDomainName -eq "")) {
+    } elseif (($NewMachineName -eq $null) -or ($NewMachineName -eq "")) {
         $Form1.Controls.Remove($labelResult0)
         $Form1.Controls.Remove($labelResult1)
         $Form1.Controls.Remove($progressBar)
         $Form1.Update()
-        $labelResult1.Text = "Cannot change domain name, you have to enter a domain name in the text box." 
+        $labelResult1.Text = "Cannot change computer name, you have to enter a computer name in the text box." 
         $labelResult1.ForeColor = "Red"
         $Form1.Controls.Add($labelResult1)
     } else {
@@ -194,7 +120,7 @@ $okButton.Add_Click({
         $Form1.Controls.Remove($labelResult1)
         $Form1.Controls.Remove($progressBar)
         $Form1.Update()
-        $labelResult1.Text = "Cannot change domain name from $current_name to $newDomainName because it is not a valid domain name." 
+        $labelResult1.Text = "Cannot change computer name from $CurrentName to $NewMachineName because it is not a valid computer name." 
         $labelResult1.ForeColor = "Red"
         $Form1.Controls.Add($labelResult1)
     }
