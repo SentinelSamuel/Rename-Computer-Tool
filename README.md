@@ -8,11 +8,11 @@
     </h1>
 </div>
 
-### To launch the tool
+### 1) To launch the tool
 ```
 - Extract files
 - Double click on Rename-Computer-Tool.exe
 ```
-### The initial source code of the exe is the .ps1 file 
+### 2) The initial source code of the exe is the .ps1 file 
 
 <img width="444" alt="image" src="https://github.com/SentinelSamuel/Change-Domain/assets/114468569/0f67c74c-f197-4c36-bc53-730d2b7a1d24">
