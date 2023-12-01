@@ -86,8 +86,8 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $okButton.DialogResult = 0
     $okButton.Add_Click({    
         $NewMachineName = $textbox.Text
-        Set-Content "C:\old_computername.txt" -Value $NewMachineName
         if (Test-ValidMachineName -MachineName $NewMachineName) {
+            Set-Content "C:\old_computername.txt" -Value $NewMachineName
             $labelResult0.ForeColor = "DarkViolet"
             $labelResult0.Text = "Changing computer name, and will restart after it... (from $NewMachineName to $CurrentName)"
             $Form1.Controls.Add($labelResult0)
