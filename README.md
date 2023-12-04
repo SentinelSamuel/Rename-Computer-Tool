@@ -16,4 +16,4 @@
 ```
 ### 2) The initial source code of the exe is the .ps1 file 
 
-<img width="444" alt="image" src="https://github.com/SentinelSamuel/Change-Domain/assets/114468569/0f67c74c-f197-4c36-bc53-730d2b7a1d24">
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/assets/114468569/58edc875-20bc-491a-8ee9-a2baa7ddaf4d)
