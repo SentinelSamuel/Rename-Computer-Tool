@@ -1,3 +1,6 @@
+# By Samuel PAGES 
+# Done : December 4th 2023
+
 if(!(Test-Path "C:\old_computername.txt")) {
 
     function Test-ValidMachineName {
@@ -47,13 +50,14 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create label
     $labelPrompt = New-Object System.Windows.Forms.Label
-    $labelPrompt.Text = "Enter the new machine name :"
-    $labelPrompt.AutoSize = $true
-    $labelPrompt.Location = New-Object System.Drawing.Point(20,30)
+    $labelPrompt.Text = "To make this Environment useable by all the SEs, you must change the machine name, enter the computer name right here :"
+    $labelPrompt.Size = New-Object System.Drawing.Size(250,40)
+    $labelPrompt.AutoSize = $false
+    $labelPrompt.Location = New-Object System.Drawing.Point(20,25)
 
     # Create textbox
     $textbox = New-Object System.Windows.Forms.TextBox
-    $textbox.Location = New-Object System.Drawing.Point(20,60)
+    $textbox.Location = New-Object System.Drawing.Point(20,70)
     $textbox.Size = New-Object System.Drawing.Size(250,20)
 
     # Add picture
@@ -65,21 +69,21 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create LabelResult0
     $labelResult0 = New-Object System.Windows.Forms.Label
-    $labelResult0.Location = New-Object System.Drawing.Point(20,120)
+    $labelResult0.Location = New-Object System.Drawing.Point(20,130)
     $labelResult0.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
     $labelResult0.Size = New-Object System.Drawing.Size(500,25)
     $labelResult0.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 
     # Create LabelResult1
     $labelResult1 = New-Object System.Windows.Forms.Label
-    $labelResult1.Location = New-Object System.Drawing.Point(20,180)
+    $labelResult1.Location = New-Object System.Drawing.Point(20,190)
     $labelResult1.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
     $labelResult1.Size = New-Object System.Drawing.Size(500,25)
     $labelResult1.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 
     # Create OK button
     $okButton = New-Object System.Windows.Forms.Button
-    $okButton.Location = New-Object System.Drawing.Point(20,90)
+    $okButton.Location = New-Object System.Drawing.Point(20,100)
     $okButton.Size = New-Object System.Drawing.Size(75,23)
     $okButton.Cursor = [System.Windows.Forms.Cursors]::Hand
     $okButton.Text = "OK"
@@ -87,14 +91,14 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $okButton.Add_Click({    
         $NewMachineName = $textbox.Text
         if (Test-ValidMachineName -MachineName $NewMachineName) {
-            Set-Content "C:\old_computername.txt" -Value $NewMachineName
+            Set-Content "C:\old_computername.txt" -Value $CurrentName
             $labelResult0.ForeColor = "DarkViolet"
             $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
             $Form1.Controls.Add($labelResult0)
 
             # Create progress bar
             $progressBar = New-Object System.Windows.Forms.ProgressBar
-            $progressBar.Location = New-Object System.Drawing.Point(20,150)
+            $progressBar.Location = New-Object System.Drawing.Point(20,160)
             $progressBar.Size = New-Object System.Drawing.Size(500, 20)
             $progressBar.ForeColor = "DarkViolet"
             $progressBar.MarqueeAnimationSpeed = 30 # You can adjust the speed (milliseconds)
@@ -131,7 +135,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create Cancel button
     $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Location = New-Object System.Drawing.Point(110,90)
+    $cancelButton.Location = New-Object System.Drawing.Point(110,100)
     $cancelButton.Size = New-Object System.Drawing.Size(75,23)
     $cancelButton.Text = "Cancel"
     $cancelButton.DialogResult = 1
