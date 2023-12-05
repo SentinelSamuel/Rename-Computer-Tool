@@ -1,0 +1,1 @@
+Start-Process "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ArgumentList "  -ExecutionPolicy Bypass -File $PSScriptRoot\Rename-Computer-Tool.ps1 -WindowStyle Hidden" -WindowStyle Hidden
