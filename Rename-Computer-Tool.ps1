@@ -46,7 +46,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $Form1.KeyPreview = $false
     $Form1.AllowTransparency = $false
     $Form1.AllowDrop = $false
-    $Form1.Icon = New-Object System.Drawing.Icon ".\S1_Logo_Shield_RGB_PURP.ico"
+    $Form1.Icon = New-Object System.Drawing.Icon "$PSscriptRoot\S1_Logo_Shield_RGB_PURP.ico"
 
     # Create label
     $labelPrompt = New-Object System.Windows.Forms.Label
@@ -61,7 +61,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $textbox.Size = New-Object System.Drawing.Size(250,20)
 
     # Add picture
-    $imagePath = ".\S1_Logo_Shield_RGB_PURP.png"
+    $imagePath = "$PSscriptRoot\S1_Logo_Shield_RGB_PURP.png"
     $picturebox = New-Object Windows.Forms.PictureBox
     $picturebox.ImageLocation = $imagePath
     $picturebox.SizeMode = [Windows.Forms.PictureBoxSizeMode]::Zoom
