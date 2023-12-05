@@ -50,7 +50,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create label
     $labelPrompt = New-Object System.Windows.Forms.Label
-    $labelPrompt.Text = "To make this Environment useable by all the SEs, you must change the machine name, enter the computer name right here :"
+    $labelPrompt.Text = "To make this Environment useable by all the SEs, you must change the machine name. Please enter the computer name right here :"
     $labelPrompt.Size = New-Object System.Drawing.Size(250,40)
     $labelPrompt.AutoSize = $false
     $labelPrompt.Location = New-Object System.Drawing.Point(20,25)
