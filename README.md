@@ -11,7 +11,12 @@
 ### 1) To launch the tool
 ```
 Launch the launch.ps1
+Tips :
+ - You can create a .lnk to the launch.ps1 to make it easier to launch
+ - You can change the default application used on a double click of a .ps1 to allow users to launch a .ps1 just double-clicking on it
 ```
+<img width="578" alt="image" src="https://github.com/SentinelSamuel/Rename-Computer-Tool/assets/114468569/600244c5-20db-4ff1-af68-ce2a4ceda8d3">
+
 ### 2) The initial source code of the exe is the .ps1 file 
 
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/assets/114468569/58edc875-20bc-491a-8ee9-a2baa7ddaf4d)
