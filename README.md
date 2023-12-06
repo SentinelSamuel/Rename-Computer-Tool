@@ -25,7 +25,7 @@ Tips :
 
 On error you have to remind that : 
 ```
-- The maximum caracters of computer name is 15
+- The maximum caracters of a computer name is 15
 - There is a file created during the process, named old_computername.txt that will go on C:\old_computername.txt
  and will contain the old computer name, IF YOU REMOVE IT, YOU CAN RESTART THE SCRIPT
 ```
