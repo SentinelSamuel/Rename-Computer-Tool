@@ -10,9 +10,7 @@
 
 ### 1) To launch the tool
 ```
-- Extract files
-- Double click on Rename-Computer-Tool.exe
-(Pictures and icon are already empackaged in the .exe file) 
+Launch the launch.ps1
 ```
 ### 2) The initial source code of the exe is the .ps1 file 
 
