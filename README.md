@@ -10,6 +10,7 @@
 
 ### 1) To launch the tool
 ```
+If the machine is already in a domain, his DC has to be up so the computer can call his DC for a double-check
 Launch the launch.ps1
 Tips :
  - You can create a .lnk to the launch.ps1 to make it easier to launch
