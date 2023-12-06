@@ -1,23 +1,23 @@
-﻿# By Samuel PAGES 
+# By Samuel PAGES 
 # Done : December 4th 2023
 
 if(!(Test-Path "C:\old_computername.txt")) {
 
-    function Test-ValidMachineName {
-        param (
-            [string]$MachineName
-        )
+	function Test-ValidMachineName {
+		param (
+			[string]$MachineName
+		)
 
-        # Define the regex pattern for a valid machine name
-        $machineNameRegex = "^[a-zA-Z0-9-]+$"
+		# Define the regex pattern for a valid machine name
+		$machineNameRegex = "^[a-zA-Z0-9-]+$"
 
-        # Check if the input string matches the regex pattern
-        if ($MachineName -match $machineNameRegex) {
-            return $true
-        } else {
-            return $false
-        }
-    }
+		# Check if the input string matches the regex pattern and is 15 characters or less
+		if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15) {
+			return $true
+		} else {
+			return $false
+		}
+	}
 
     $CurrentName = $env:COMPUTERNAME
 
@@ -78,7 +78,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $labelResult1 = New-Object System.Windows.Forms.Label
     $labelResult1.Location = New-Object System.Drawing.Point(20,190)
     $labelResult1.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
-    $labelResult1.Size = New-Object System.Drawing.Size(500,25)
+    $labelResult1.Size = New-Object System.Drawing.Size(500,50)
     $labelResult1.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 
     # Create OK button
@@ -127,7 +127,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $Form1.Controls.Remove($labelResult1)
             $Form1.Controls.Remove($progressBar)
             $Form1.Update()
-            $labelResult1.Text = "Cannot change computer name from $CurrentName to $NewMachineName because it is not a valid computer name." 
+            $labelResult1.Text = "Cannot change computer name from $CurrentName to $NewMachineName because it is not a valid computer name (no more than 15 caracters)." 
             $labelResult1.ForeColor = "Red"
             $Form1.Controls.Add($labelResult1)
         }
