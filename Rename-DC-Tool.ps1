@@ -1,5 +1,6 @@
 # By Samuel PAGES 
 # Done : June 27th 2024
+# Change launch.ps1 to launch this script
 
 if(!(Test-Path "C:\old_computername.txt")) {
 
