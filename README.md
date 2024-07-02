@@ -30,11 +30,9 @@ Tips :
  - You can create a Task in the task scheduler that will be run with highest priviledges and will be launched every logon
 
  - You can add a key : 
-The keys:
-
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for all users.
-
-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for current user.
+    The keys:
+        HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for all users.
+        HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for current user.
 ```
 source : https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon
 
