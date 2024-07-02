@@ -1,11 +1,20 @@
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/114468569/236483898-d9d94370-3a77-4262-8349-f592b859f3f9.png" alt="drawing" style="width:400px;">
+    <img src="https://github.com/SentinelSamuel/S1_Csv_Isolate/blob/main/Pictures/SentinelOne.png" alt="drawing" style="width:400px;">
 </p>
 
 <div align="center">
-    <h1> 
+    <h1>
         Rename-Computer-Tool
     </h1>
+</div>
+
+
+<p align="center">
+         This script allows you to rename a computer and even a DC<br/>
+</p>
+
+<div align="center">
+    <a href="https://fr.sentinelone.com/"><img src="https://img.shields.io/badge/Website-SentinelOne-6100FF?labelColor=FFFFFF&style=flat&link=https://fr.sentinelone.com/" alt="Website" /></a>
 </div>
 
 ### 1) To launch the tool
