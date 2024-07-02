@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/SentinelSamuel/S1_Csv_Isolate/blob/main/Pictures/SentinelOne.png" alt="drawing" style="width:400px;">
+    <img src="https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/SentinelOne.png" alt="drawing" style="width:400px;">
 </p>
 
 <div align="center">
