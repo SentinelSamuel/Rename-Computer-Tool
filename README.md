@@ -21,10 +21,14 @@
 ```
 If the machine is already in a domain, his DC has to be up so the computer can call his DC for a double-check
 Then, launch the 'launch.ps1'
+
 Tips :
  - You can create a .lnk to the launch.ps1 to make it easier to launch
+
  - You can change the default application used on a double click of a .ps1 to allow users to launch a .ps1 just double-clicking on it
+
  - You can create a Task in the task scheduler that will be run with highest priviledges and will be launched every logon
+
  - You can add a key : 
 The keys:
 
