@@ -32,7 +32,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs
 
 HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for current user.
 ```
-source![https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon]
+source : https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon
 
 ### 2) The initial source code of the exe is the .ps1 file 
 
