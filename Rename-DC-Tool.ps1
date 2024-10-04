@@ -1,9 +1,9 @@
 # By Samuel PAGES 
 # Done : June 27th 2024
+# Rewritten : October 4th 2024 
 # Change launch.ps1 to launch this script
 
 if(!(Test-Path "C:\old_computername.txt")) {
-
 	function Test-ValidMachineName {
 		param (
 			[string]$MachineName
@@ -19,7 +19,6 @@ if(!(Test-Path "C:\old_computername.txt")) {
 			return $false
 		}
 	}
-
     # Function to update DNS entries for a new computer name based on current IP address
     function Update-DnsForNewComputerName {
         param (
@@ -38,22 +37,22 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $reverseZoneName = "$($domain -replace '\.', '.').in-addr.arpa"
 
             # Get DNS entries matching the current IP address in forward lookup zone
-            $currentForwardEntries = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -ErrorAction SilentlyContinue |
-                                     Where-Object { $_.RecordType -eq "A" -and $_.RecordData.IPv4Address -eq $newIp }
+            $currentForwardEntries = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -ErrorAction SilentlyContinue `
+            | Where-Object { $_.RecordType -eq "A" -and $_.RecordData.IPv4Address -eq $newIp }
 
             if ($currentForwardEntries) {
                 foreach ($entry in $currentForwardEntries) {
                     # Remove DNS entry matching the current IP address from forward lookup zone
                     Remove-DnsServerResourceRecord -ZoneName $forwardZoneName -InputObject $entry -Force
-                    Write-Host "Removed DNS entry for IP $($entry.RecordData.IPv4Address): $($entry.Name)"
+                    Write-Host "[i] Removed DNS entry for IP $($entry.RecordData.IPv4Address): $($entry.Name)" -ForegroundColor Blue
                 }
             } else {
-                Write-Host "No existing DNS entries found for IP $newIp in forward lookup zone $forwardZoneName."
+                Write-Host "[i] No existing DNS entries found for IP $newIp in forward lookup zone $forwardZoneName." -ForegroundColor Blue
             }
 
             # Get DNS entries matching the current IP address in reverse lookup zone
-            $currentReverseEntries = Get-DnsServerResourceRecord -ZoneName $reverseZoneName -ErrorAction SilentlyContinue |
-                                     Where-Object { $_.RecordType -eq "PTR" -and $_.RecordData.IPv4Address -eq $newIp }
+            $currentReverseEntries = Get-DnsServerResourceRecord -ZoneName $reverseZoneName -ErrorAction SilentlyContinue `
+            | Where-Object { $_.RecordType -eq "PTR" -and $_.RecordData.IPv4Address -eq $newIp }
 
             if ($currentReverseEntries) {
                 foreach ($entry in $currentReverseEntries) {
@@ -67,20 +66,20 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
             # Add new DNS entry for the new computer name in forward lookup zone
             Add-DnsServerResourceRecordA -ZoneName $forwardZoneName -Name $NewComputerName -IPv4Address $newIp -ErrorAction Stop
-            Write-Host "Added new DNS entry: $NewComputerName with IP $newIp"
+            Write-Host "[+] Added new DNS entry: $NewComputerName with IP $newIp" -ForegroundColor Green
 
             # Add new PTR DNS entry for the new computer name in reverse lookup zone
             $ptrName = "$newIp.Split('.')[3].in-addr.arpa"
             Add-DnsServerResourceRecordPtr -ZoneName $reverseZoneName -Name $ptrName -PtrDomainName $NewComputerName -ErrorAction Stop
-            Write-Host "Added new PTR DNS entry: $ptrName for $NewComputerName"
+            Write-Host "[+] Added new PTR DNS entry: $ptrName for $NewComputerName" -ForegroundColor Green
 
         }
         catch {
             Write-Error "Failed to update DNS entries. $_"
         }
     }
-
     
+    # Removes DNS Entries of the DC
     function Remove-DnsEntries {
         param (
             [string]$ComputerName
@@ -104,17 +103,85 @@ if(!(Test-Path "C:\old_computername.txt")) {
             if ($recordsToRemove) {
                 foreach ($record in $recordsToRemove) {
                     Remove-DnsServerResourceRecord -ZoneName $forwardZoneName -InputObject $record -Force
-                    Write-Host "Removed DNS entry from forward lookup zone '$forwardZoneName': $($record.HostName) with IP $($record.RecordData.IPv4Address)"
+                    Write-Host "[i] Removed DNS entry from forward lookup zone '$forwardZoneName': $($record.HostName) with IP $($record.RecordData.IPv4Address)" -ForegroundColor Blue
                 }
             } else {
-                Write-Host "No DNS entry found in forward lookup zone '$forwardZoneName' for IP address $newIp and computer name $ComputerName."
+                Write-Host "[i] No DNS entry found in forward lookup zone '$forwardZoneName' for IP address $newIp and computer name $ComputerName." -ForegroundColor Blue
             }
         }
         catch {
             Write-Error "Failed to remove DNS entries. $_"
         }
     }
+    # Configure WinRM over HTTPS by creating a certificate
+    function Edit-WinRMHttps {
+        param (
+            [Parameter(Mandatory=$true, HelpMessage="Enter the DNS name for the certificate.")]
+            [string]$DnsName,
+    
+            [Parameter(Mandatory=$false, HelpMessage="Specify the export path for the certificate. Default is C:\Temp.")]
+            [string]$ExportPath = "C:\Temp",
+    
+            [Parameter(Mandatory=$false, HelpMessage="Specify the path to save the password. Default is C:\WinRMHTTPS_passwd.txt.")]
+            [string]$PasswordFilePath = "C:\WinRMHTTPS_passwd.txt"
+        )
+        
+        # Function to generate a random password
+        function Get-RandomPassword {
+            param (
+                [int]$length = 20
+            )
+            # Define characters for the password
+            $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-='
+            # Generate password
+            $password = -join ((1..$length) | ForEach-Object { $characters | Get-Random })
+            return $password
+        }
+    
+        # Generate random password
+        $randomPassword = Get-RandomPassword -length 20
+    
+        # Convert random password to SecureString
+        $CertPassword = ConvertTo-SecureString -String $randomPassword -Force -AsPlainText
+    
+        # Save the generated password to a file (not as a SecureString, just plain text)
+        $randomPassword | Out-File -FilePath $PasswordFilePath -Force
+    
+        Write-Host "[+] Random password generated and saved to: $PasswordFilePath" -ForegroundColor Yellow
+    
+        # Create a self-signed certificate
+        $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My
+        $thumbprint = $cert.Thumbprint
+    
+        # Export the certificate
+        $certPath = "Cert:\LocalMachine\My\$thumbprint"
+    
+        # Ensure the export directory exists
+        if (-Not (Test-Path -Path $ExportPath)) {
+            New-Item -Path $ExportPath -ItemType Directory
+        }
+    
+        # Export the certificate to a .pfx file using the secure password
+        Export-PfxCertificate -Cert $certPath -FilePath "$ExportPath\winrm.pfx" -Password $CertPassword
+    
+        Write-Host "[+] Certificate exported to: $ExportPath\winrm.pfx" -ForegroundColor Green
+    
+        # Open the firewall port for WinRM HTTPS
+        New-NetFirewallRule -Name "WinRM HTTPS" -DisplayName "WinRM over HTTPS" -Enabled $true -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow
+    
+        # Configure the WinRM service
+        winrm quickconfig -q
+    
+        # Create the WinRM listener
+        winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$DnsName`";CertificateThumbprint=`"$thumbprint`"}"
+    
+        # Verify the WinRM listener configuration
+        winrm enumerate winrm/config/listener
+    
+        Write-Host "[+] WinRM over HTTPS has been configured successfully." -ForegroundColor Green
+    }
 
+    # Rename SPNs if there is
     function Rename-SPNs {
         param (
             [Parameter(Mandatory=$true)]
@@ -240,7 +307,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
             # Simulate a progress bar
             $progressBar.Value = 0
-
+            Edit-WinRMHttps -DnsName $NewMachineName
             # Update new DNS computer Name 
             Update-DnsForNewComputerName -NewComputerName $NewMachineName
             $progressBar.Value = 25
@@ -257,7 +324,6 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $labelResult1.ForeColor = "Green"
             $labelResult1.Text = "Machine name changed successfully."
             $Form1.Controls.Add($labelResult1)
-               
         } elseif (($NewMachineName -eq $null) -or ($NewMachineName -eq "")) {
             $Form1.Controls.Remove($labelResult0)
             $Form1.Controls.Remove($labelResult1)
