@@ -307,7 +307,9 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
             # Simulate a progress bar
             $progressBar.Value = 0
-            Edit-WinRMHttps -DnsName $NewMachineName
+            $DomainName = (Get-ADDomain).DNSRoot
+            $DnsName = "$NewMachineName.$DomainName"
+            Edit-WinRMHttps -DnsName $DnsName
             # Update new DNS computer Name 
             Update-DnsForNewComputerName -NewComputerName $NewMachineName
             $progressBar.Value = 25
