@@ -47,4 +47,5 @@ On error you have to remind that :
 - The maximum caracters of a computer name is 15
 - There is a file created during the process, named old_computername.txt that will go on C:\old_computername.txt
  and will contain the old computer name, IF YOU REMOVE IT, YOU CAN RESTART THE SCRIPT
+- For the Rename-DC-Tool, it creates also a C:\WinRMHTTPS_passwd.txt that will contain the WinRM HTTPS Certificate (do not remove it)
 ```
