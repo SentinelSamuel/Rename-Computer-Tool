@@ -166,7 +166,6 @@ function Remove-CertificatesByComputerName {
         Write-Error "An error occurred while attempting to remove certificates. $_"
     }
 }
-
 # Configure WinRM over HTTPS by creating a certificate
 function Edit-WinRMHttps {
     param (
@@ -179,7 +178,6 @@ function Edit-WinRMHttps {
         [Parameter(Mandatory=$false, HelpMessage="Specify the path to save the password. Default is C:\WinRMHTTPS_passwd.txt.")]
         [string]$PasswordFilePath = "C:\WinRMHTTPS_passwd.txt"
     )
-    
     # Function to generate a random password
     function Get-RandomPassword {
         param (
@@ -191,47 +189,91 @@ function Edit-WinRMHttps {
         $password = -join ((1..$length) | ForEach-Object { $characters | Get-Random })
         return $password
     }
-
+    # Verify if a certificate with the given DNS name already exists
+    $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -like "*$DnsName*" }
+    if ($existingCert) {
+        Write-Host "[-] A certificate with DNS name '$DnsName' already exists. Please remove it or choose a different DNS name." -ForegroundColor Red
+        return
+    }
+    # Check if the DNS name is valid
+    if (-not $DnsName -or $DnsName.Length -gt 255 -or $DnsName -match '[^\w.-]') {
+        Write-Host "[-] The DNS name provided is invalid. It must not be empty, should be less than 256 characters, and should not contain special characters." -ForegroundColor Red
+        return
+    }
     # Generate random password
     $randomPassword = Get-RandomPassword -length 20
-
     # Convert random password to SecureString
     $CertPassword = ConvertTo-SecureString -String $randomPassword -Force -AsPlainText
-
     # Save the generated password to a file (not as a SecureString, just plain text)
     $randomPassword | Out-File -FilePath $PasswordFilePath -Force
-
     Write-Host "[+] Random password generated and saved to: $PasswordFilePath" -ForegroundColor Yellow
-
     # Create a self-signed certificate
-    $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My
-    $thumbprint = $cert.Thumbprint
+    try {
+        $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -ErrorAction Stop
+        $thumbprint = $cert.Thumbprint
 
+        # Verify the certificate creation
+        if ($cert) {
+            Write-Host "[+] Certificate with DNS name '$DnsName' created successfully." -ForegroundColor Green
+        } else {
+            Write-Host "[-] Certificate creation failed." -ForegroundColor Red
+            return
+        }
+    } catch {
+        Write-Host "[-] Error creating certificate: $_" -ForegroundColor Red
+        return
+    }
     # Export the certificate
     $certPath = "Cert:\LocalMachine\My\$thumbprint"
-
     # Ensure the export directory exists
     if (-Not (Test-Path -Path $ExportPath)) {
-        New-Item -Path $ExportPath -ItemType Directory
+        try {
+            New-Item -Path $ExportPath -ItemType Directory -ErrorAction Stop
+        } catch {
+            Write-Host "[-] Failed to create export directory: $_" -ForegroundColor Red
+            return
+        }
     }
-
+    # Check if the export path is writable
+    if (-Not (Test-Path -Path $ExportPath -PathType Container) -or -Not (Test-Path -Path $ExportPath -PathType Leaf)) {
+        Write-Host "[-] The export path is not writable or does not exist." -ForegroundColor Red
+        return
+    }
     # Export the certificate to a .pfx file using the secure password
-    Export-PfxCertificate -Cert $certPath -FilePath "$ExportPath\winrm.pfx" -Password $CertPassword
-
-    Write-Host "[+] Certificate exported to: $ExportPath\winrm.pfx" -ForegroundColor Green
-
-    # Open the firewall port for WinRM HTTPS
-    New-NetFirewallRule -Name "WinRM HTTPS" -DisplayName "WinRM over HTTPS" -Enabled $true -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow
-
+    try {
+        Export-PfxCertificate -Cert $certPath -FilePath "$ExportPath\winrm.pfx" -Password $CertPassword -ErrorAction Stop
+        Write-Host "[+] Certificate exported to: $ExportPath\winrm.pfx" -ForegroundColor Green
+    } catch {
+        Write-Host "[-] Failed to export the certificate: $_" -ForegroundColor Red
+        return
+    }
+    # Check if the firewall rule already exists
+    $firewallRuleName = "WinRM HTTPS"
+    $existingRule = Get-NetFirewallRule -Name $firewallRuleName -ErrorAction SilentlyContinue
+    if (-not $existingRule) {
+        # Open the firewall port for WinRM HTTPS
+        try {
+            New-NetFirewallRule -Name $firewallRuleName -DisplayName "WinRM over HTTPS" -Enabled $true -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow -ErrorAction Stop
+            Write-Host "[+] Firewall rule '$firewallRuleName' created successfully." -ForegroundColor Green
+        } catch {
+            Write-Host "[-] Failed to create firewall rule: $_" -ForegroundColor Red
+            return
+        }
+    } else {
+        Write-Host "[+] Firewall rule '$firewallRuleName' already exists." -ForegroundColor Yellow
+    }
     # Configure the WinRM service
     winrm quickconfig -q
-
     # Create the WinRM listener
-    winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$DnsName`";CertificateThumbprint=`"$thumbprint`"}"
+    try {
+        winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$DnsName`";CertificateThumbprint=`"$thumbprint`"}"
+    } catch {
+        Write-Host "[-] Failed to create WinRM listener: $_" -ForegroundColor Red
+        return
+    }
 
     # Verify the WinRM listener configuration
     winrm enumerate winrm/config/listener
-
     Write-Host "[+] WinRM over HTTPS has been configured successfully." -ForegroundColor Green
 }
 
