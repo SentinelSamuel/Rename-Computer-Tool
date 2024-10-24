@@ -166,7 +166,7 @@ function Remove-CertificatesByComputerName {
         Write-Error "An error occurred while attempting to remove certificates. $_"
     }
 }
-# Configure WinRM over HTTPS by creating a certificate
+## Configure WinRM over HTTPS by creating a certificate
 function Edit-WinRMHttps {
     param (
         [Parameter(Mandatory=$true, HelpMessage="Enter the DNS name for the certificate.")]
@@ -211,7 +211,6 @@ function Edit-WinRMHttps {
     try {
         $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -ErrorAction Stop
         $thumbprint = $cert.Thumbprint
-
         # Verify the certificate creation
         if ($cert) {
             Write-Host "[+] Certificate with DNS name '$DnsName' created successfully." -ForegroundColor Green
@@ -225,6 +224,7 @@ function Edit-WinRMHttps {
     }
     # Export the certificate
     $certPath = "Cert:\LocalMachine\My\$thumbprint"
+    
     # Ensure the export directory exists
     if (-Not (Test-Path -Path $ExportPath)) {
         try {
@@ -247,31 +247,49 @@ function Edit-WinRMHttps {
         Write-Host "[-] Failed to export the certificate: $_" -ForegroundColor Red
         return
     }
+    # Check if there is an existing WinRM HTTPS listener
+    try {
+        $existingListener = winrm enumerate winrm/config/listener | Where-Object { $_ -like "*Transport=HTTPS*" }
+        if ($existingListener) {
+            # Remove existing listener
+            winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
+            Write-Host "[+] Existing WinRM HTTPS listener removed." -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "[-] Failed to remove existing WinRM HTTPS listener: $_" -ForegroundColor Red
+        return
+    }
     # Check if the firewall rule already exists
     $firewallRuleName = "WinRM HTTPS"
     $existingRule = Get-NetFirewallRule -Name $firewallRuleName -ErrorAction SilentlyContinue
-    if (-not $existingRule) {
-        # Open the firewall port for WinRM HTTPS
+    if ($existingRule) {
+        # Remove existing firewall rule
         try {
-            New-NetFirewallRule -Name $firewallRuleName -DisplayName "WinRM over HTTPS" -Enabled $true -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow -ErrorAction Stop
-            Write-Host "[+] Firewall rule '$firewallRuleName' created successfully." -ForegroundColor Green
+            Remove-NetFirewallRule -Name $firewallRuleName -ErrorAction Stop
+            Write-Host "[+] Existing firewall rule '$firewallRuleName' removed." -ForegroundColor Green
         } catch {
-            Write-Host "[-] Failed to create firewall rule: $_" -ForegroundColor Red
+            Write-Host "[-] Failed to remove existing firewall rule: $_" -ForegroundColor Red
             return
         }
-    } else {
-        Write-Host "[+] Firewall rule '$firewallRuleName' already exists." -ForegroundColor Yellow
+    }
+    # Open the firewall port for WinRM HTTPS
+    try {
+        New-NetFirewallRule -Name $firewallRuleName -DisplayName "WinRM over HTTPS" -Enabled $true -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow -ErrorAction Stop
+        Write-Host "[+] Firewall rule '$firewallRuleName' created successfully." -ForegroundColor Green
+    } catch {
+        Write-Host "[-] Failed to create firewall rule: $_" -ForegroundColor Red
+        return
     }
     # Configure the WinRM service
     winrm quickconfig -q
     # Create the WinRM listener
     try {
         winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$DnsName`";CertificateThumbprint=`"$thumbprint`"}"
+        Write-Host "[+] WinRM HTTPS listener created successfully." -ForegroundColor Green
     } catch {
         Write-Host "[-] Failed to create WinRM listener: $_" -ForegroundColor Red
         return
     }
-
     # Verify the WinRM listener configuration
     winrm enumerate winrm/config/listener
     Write-Host "[+] WinRM over HTTPS has been configured successfully." -ForegroundColor Green
