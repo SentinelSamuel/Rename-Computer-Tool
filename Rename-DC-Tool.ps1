@@ -10,7 +10,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
     # Import modules
     Import-Module -Name $modulePath -ErrorAction Stop
     # Verify that the module was imported successfully
-    if (Get-Module -Name Modules) {
+    if (Get-Module -Name "DC-Modules") {
         Write-Host "[+] Module imported successfully." -ForegroundColor Green
     } else {
         Write-Host "[-] Failed to import the module file." -ForegroundColor Red
