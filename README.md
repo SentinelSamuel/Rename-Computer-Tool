@@ -39,7 +39,7 @@ Tips :
 source : https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon
 
 ### 2) The initial source code of the exe is the .ps1 file 
-
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App.png)
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/assets/114468569/58edc875-20bc-491a-8ee9-a2baa7ddaf4d)
 
 ### 3) On error
