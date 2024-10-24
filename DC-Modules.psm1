@@ -170,47 +170,41 @@ function Remove-CertificatesByComputerName {
         Write-Error "An error occurred while attempting to remove certificates. $_"
     }
 }
-## Configure WinRM over HTTPS by creating a certificate
+
+# Configure WinRM over HTTPS by creating a certificate
 function Edit-WinRMHttps {
     param (
         [Parameter(Mandatory=$true, HelpMessage="Enter the DNS name for the certificate.")]
         [string]$DnsName,
 
         [Parameter(Mandatory=$false, HelpMessage="Specify the export path for the certificate. Default is C:\Temp.")]
-        [string]$ExportPath = "C:\Temp",
+        [string]$ExportPath = "C:\",
 
         [Parameter(Mandatory=$false, HelpMessage="Specify the path to save the password. Default is C:\WinRMHTTPS_passwd.txt.")]
         [string]$PasswordFilePath = "C:\WinRMHTTPS_passwd.txt"
     )
     # Function to generate a random password
     function Get-RandomPassword {
-        param ([int]$length = 20)
-    
-        # Ensure the password contains at least one of each type of character
-        $lowercase = 'abcdefghijklmnopqrstuvwxyz'
-        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        $numbers = '0123456789'
-        $special = '!@#$%^&*()_+-='
-    
-        # Collect required characters
-        $requiredChars = @(
-            ($lowercase | Get-Random),
-            ($uppercase | Get-Random),
-            ($numbers | Get-Random),
-            ($special | Get-Random)
+        param (
+            [Parameter(Mandatory)]
+            [int] $length
         )
-    
-        # Remaining characters to fill the length
-        $remainingLength = $length - $requiredChars.Length
-        $allCharacters = $lowercase + $uppercase + $numbers + $special
-    
-        $remainingChars = -join (1..$remainingLength | ForEach-Object { $allCharacters | Get-Random })
-    
-        # Shuffle the final password to avoid predictable patterns
-        $password = -join ($requiredChars + $remainingChars | Get-Random -Count $length)
         
-        return $password
-    }    
+        $charSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.ToCharArray()
+        
+        $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
+        $bytes = New-Object byte[]($length)
+        
+        $rng.GetBytes($bytes)
+        
+        $result = New-Object char[]($length)
+        
+        for ($i = 0 ; $i -lt $length ; $i++) {
+            $result[$i] = $charSet[$bytes[$i]%$charSet.Length]
+        }
+        
+        return -join $result
+    }
     # Verify if a certificate with the given DNS name already exists
     $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -like "*$DnsName*" }
     if ($existingCert) {
@@ -246,16 +240,7 @@ function Edit-WinRMHttps {
     }
     # Export the certificate
     $certPath = "Cert:\LocalMachine\My\$thumbprint"
-    
-    # Ensure the export directory exists
-    if (-Not (Test-Path -Path $ExportPath)) {
-        try {
-            New-Item -Path $ExportPath -ItemType Directory -ErrorAction Stop
-        } catch {
-            Write-Host "[-] Failed to create export directory: $_" -ForegroundColor Red
-            return
-        }
-    }
+
     # Check if the export path is writable
     if (-Not (Test-Path -Path $ExportPath -PathType Container) -or -Not (Test-Path -Path $ExportPath -PathType Leaf)) {
         Write-Host "[-] The export path is not writable or does not exist." -ForegroundColor Red
@@ -373,32 +358,25 @@ function Enable-LDAPS {
 
     # Function to generate a random password
     function Get-RandomPassword {
-        param ([int]$length = 20)
-
-        # Ensure the password contains at least one of each type of character
-        $lowercase = 'abcdefghijklmnopqrstuvwxyz'
-        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        $numbers = '0123456789'
-        $special = '!@#$%^&*()_+-='
-
-        # Collect required characters
-        $requiredChars = @(
-            ($lowercase | Get-Random),
-            ($uppercase | Get-Random),
-            ($numbers | Get-Random),
-            ($special | Get-Random)
+        param (
+            [Parameter(Mandatory)]
+            [int] $length
         )
-
-        # Remaining characters to fill the length
-        $remainingLength = $length - $requiredChars.Length
-        $allCharacters = $lowercase + $uppercase + $numbers + $special
-
-        $remainingChars = -join (1..$remainingLength | ForEach-Object { $allCharacters | Get-Random })
-
-        # Shuffle the final password to avoid predictable patterns
-        $password = -join ($requiredChars + $remainingChars | Get-Random -Count $length)
-
-        return $password
+        
+        $charSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.ToCharArray()
+        
+        $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
+        $bytes = New-Object byte[]($length)
+        
+        $rng.GetBytes($bytes)
+        
+        $result = New-Object char[]($length)
+        
+        for ($i = 0 ; $i -lt $length ; $i++) {
+            $result[$i] = $charSet[$bytes[$i]%$charSet.Length]
+        }
+        
+        return -join $result
     }
 
     try {
