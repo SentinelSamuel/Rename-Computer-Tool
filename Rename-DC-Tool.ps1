@@ -1,222 +1,19 @@
 # By Samuel PAGES 
 # Done : June 27th 2024
-# Rewritten : October 4th 2024 
+# Rewritten : October 24th 2024 
 # Change launch.ps1 to launch this script
 
 if(!(Test-Path "C:\old_computername.txt")) {
-	function Test-ValidMachineName {
-		param (
-			[string]$MachineName
-		)
-
-		# Define the regex pattern for a valid machine name
-		$machineNameRegex = "^[a-zA-Z0-9-]+$"
-
-		# Check if the input string matches the regex pattern and is 15 characters or less
-		if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15) {
-			return $true
-		} else {
-			return $false
-		}
-	}
-    # Function to update DNS entries for a new computer name based on current IP address
-    function Update-DnsForNewComputerName {
-        param (
-            [string]$NewComputerName
-        )
-
-        try {
-            # Retrieve current IP address
-            $newIp = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias "Ethernet").IPAddress
-
-            # Get the domain name from Active Directory configuration
-            $domain = (Get-ADDomain).DNSRoot
-
-            # Construct the DNS zone names
-            $forwardZoneName = $domain
-            $reverseZoneName = "$($domain -replace '\.', '.').in-addr.arpa"
-
-            # Get DNS entries matching the current IP address in forward lookup zone
-            $currentForwardEntries = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -ErrorAction SilentlyContinue `
-            | Where-Object { $_.RecordType -eq "A" -and $_.RecordData.IPv4Address -eq $newIp }
-
-            if ($currentForwardEntries) {
-                foreach ($entry in $currentForwardEntries) {
-                    # Remove DNS entry matching the current IP address from forward lookup zone
-                    Remove-DnsServerResourceRecord -ZoneName $forwardZoneName -InputObject $entry -Force
-                    Write-Host "[i] Removed DNS entry for IP $($entry.RecordData.IPv4Address): $($entry.Name)" -ForegroundColor Blue
-                }
-            } else {
-                Write-Host "[i] No existing DNS entries found for IP $newIp in forward lookup zone $forwardZoneName." -ForegroundColor Blue
-            }
-
-            # Get DNS entries matching the current IP address in reverse lookup zone
-            $currentReverseEntries = Get-DnsServerResourceRecord -ZoneName $reverseZoneName -ErrorAction SilentlyContinue `
-            | Where-Object { $_.RecordType -eq "PTR" -and $_.RecordData.IPv4Address -eq $newIp }
-
-            if ($currentReverseEntries) {
-                foreach ($entry in $currentReverseEntries) {
-                    # Remove DNS entry matching the current IP address from reverse lookup zone
-                    Remove-DnsServerResourceRecord -ZoneName $reverseZoneName -InputObject $entry -Force
-                    Write-Host "Removed DNS PTR entry for IP $($entry.RecordData.IPv4Address): $($entry.Name)"
-                }
-            } else {
-                Write-Host "No existing DNS PTR entries found for IP $newIp in reverse lookup zone $reverseZoneName."
-            }
-
-            # Add new DNS entry for the new computer name in forward lookup zone
-            Add-DnsServerResourceRecordA -ZoneName $forwardZoneName -Name $NewComputerName -IPv4Address $newIp -ErrorAction Stop
-            Write-Host "[+] Added new DNS entry: $NewComputerName with IP $newIp" -ForegroundColor Green
-
-            # Add new PTR DNS entry for the new computer name in reverse lookup zone
-            $ptrName = "$newIp.Split('.')[3].in-addr.arpa"
-            Add-DnsServerResourceRecordPtr -ZoneName $reverseZoneName -Name $ptrName -PtrDomainName $NewComputerName -ErrorAction Stop
-            Write-Host "[+] Added new PTR DNS entry: $ptrName for $NewComputerName" -ForegroundColor Green
-
-        }
-        catch {
-            Write-Error "Failed to update DNS entries. $_"
-        }
-    }
+    # Define the path to the .psm1 file (adjust the path accordingly)
+    $modulePath = ".\DC-Modules.psm1"
     
-    # Removes DNS Entries of the DC
-    function Remove-DnsEntries {
-        param (
-            [string]$ComputerName
-        )
-        try {
-            # Construct the DNS zone name based on the domain name
-            $domain = (Get-ADDomain).DNSRoot
-            $forwardZoneName = $domain
-
-            # Get current IP address
-            $newIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -like "10.*" }).IPAddress
-
-            if (-not $newIp) {
-                Write-Warning "No interface found with an IP address starting with '10.'."
-                return
-            }
-
-            # Get all A records from the current zone that match the IP address and computer name
-            $recordsToRemove = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -RRType A | Where-Object { $_.RecordData.IPv4Address -eq $newIp -and $_.HostName -eq $ComputerName }
-
-            if ($recordsToRemove) {
-                foreach ($record in $recordsToRemove) {
-                    Remove-DnsServerResourceRecord -ZoneName $forwardZoneName -InputObject $record -Force
-                    Write-Host "[i] Removed DNS entry from forward lookup zone '$forwardZoneName': $($record.HostName) with IP $($record.RecordData.IPv4Address)" -ForegroundColor Blue
-                }
-            } else {
-                Write-Host "[i] No DNS entry found in forward lookup zone '$forwardZoneName' for IP address $newIp and computer name $ComputerName." -ForegroundColor Blue
-            }
-        }
-        catch {
-            Write-Error "Failed to remove DNS entries. $_"
-        }
-    }
-    # Configure WinRM over HTTPS by creating a certificate
-    function Edit-WinRMHttps {
-        param (
-            [Parameter(Mandatory=$true, HelpMessage="Enter the DNS name for the certificate.")]
-            [string]$DnsName,
-    
-            [Parameter(Mandatory=$false, HelpMessage="Specify the export path for the certificate. Default is C:\Temp.")]
-            [string]$ExportPath = "C:\Temp",
-    
-            [Parameter(Mandatory=$false, HelpMessage="Specify the path to save the password. Default is C:\WinRMHTTPS_passwd.txt.")]
-            [string]$PasswordFilePath = "C:\WinRMHTTPS_passwd.txt"
-        )
-        
-        # Function to generate a random password
-        function Get-RandomPassword {
-            param (
-                [int]$length = 20
-            )
-            # Define characters for the password
-            $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-='
-            # Generate password
-            $password = -join ((1..$length) | ForEach-Object { $characters | Get-Random })
-            return $password
-        }
-    
-        # Generate random password
-        $randomPassword = Get-RandomPassword -length 20
-    
-        # Convert random password to SecureString
-        $CertPassword = ConvertTo-SecureString -String $randomPassword -Force -AsPlainText
-    
-        # Save the generated password to a file (not as a SecureString, just plain text)
-        $randomPassword | Out-File -FilePath $PasswordFilePath -Force
-    
-        Write-Host "[+] Random password generated and saved to: $PasswordFilePath" -ForegroundColor Yellow
-    
-        # Create a self-signed certificate
-        $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My
-        $thumbprint = $cert.Thumbprint
-    
-        # Export the certificate
-        $certPath = "Cert:\LocalMachine\My\$thumbprint"
-    
-        # Ensure the export directory exists
-        if (-Not (Test-Path -Path $ExportPath)) {
-            New-Item -Path $ExportPath -ItemType Directory
-        }
-    
-        # Export the certificate to a .pfx file using the secure password
-        Export-PfxCertificate -Cert $certPath -FilePath "$ExportPath\winrm.pfx" -Password $CertPassword
-    
-        Write-Host "[+] Certificate exported to: $ExportPath\winrm.pfx" -ForegroundColor Green
-    
-        # Open the firewall port for WinRM HTTPS
-        New-NetFirewallRule -Name "WinRM HTTPS" -DisplayName "WinRM over HTTPS" -Enabled $true -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow
-    
-        # Configure the WinRM service
-        winrm quickconfig -q
-    
-        # Create the WinRM listener
-        winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$DnsName`";CertificateThumbprint=`"$thumbprint`"}"
-    
-        # Verify the WinRM listener configuration
-        winrm enumerate winrm/config/listener
-    
-        Write-Host "[+] WinRM over HTTPS has been configured successfully." -ForegroundColor Green
-    }
-
-    # Rename SPNs if there is
-    function Rename-SPNs {
-        param (
-            [Parameter(Mandatory=$true)]
-            [string]$NewComputerName
-        )
-
-        # Get current computer name
-        $CurrentComputerName = $env:COMPUTERNAME
-
-        try {
-            # Retrieve all SPNs associated with the current computer
-            $spns = Get-ADComputer $CurrentComputerName -Properties servicePrincipalName | Select-Object -ExpandProperty servicePrincipalName
-
-            if ($spns -eq $null) {
-                Write-Warning "No SPNs found for computer '$CurrentComputerName'."
-                return
-            }
-
-            foreach ($spn in $spns) {
-                # Construct new SPN with the updated computer name
-                $newSpn = $spn -replace "$CurrentComputerName", "$NewComputerName"
-
-                # Update the SPN
-                if ($spn -ne $newSpn) {
-                    Set-ADComputer $CurrentComputerName -Remove @{servicePrincipalName=$spn}
-                    Set-ADComputer $CurrentComputerName -Add @{servicePrincipalName=$newSpn}
-                    Write-Output "Renamed SPN from '$spn' to '$newSpn'."
-                }
-            }
-
-            Write-Output "All SPNs renamed successfully."
-        }
-        catch {
-            Write-Error "Failed to rename SPNs. $_"
-        }
+    # Import modules
+    Import-Module -Name $modulePath -ErrorAction Stop
+    # Verify that the module was imported successfully
+    if (Get-Module -Name Modules) {
+        Write-Host "[+] Module imported successfully." -ForegroundColor Green
+    } else {
+        Write-Host "[-] Failed to import the module file." -ForegroundColor Red
     }
 
     $CurrentName = $env:COMPUTERNAME
@@ -310,15 +107,22 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $DomainName = (Get-ADDomain).DNSRoot
             $DnsName = "$NewMachineName.$DomainName"
             Edit-WinRMHttps -DnsName $DnsName
+            $progressBar.Value = 15
             # Update new DNS computer Name 
             Update-DnsForNewComputerName -NewComputerName $NewMachineName
-            $progressBar.Value = 25
+            $progressBar.Value = 35
             # Rename Spns with the computer name
             Rename-SPNs -NewComputerName $NewMachineName
             $progressBar.Value = 50
             # Remove old DNS Entries
             Remove-DnsEntries -ComputerName $CurrentName
-            $progressBar.Value = 75
+            $progressBar.Value = 70
+            # Remove old Certificates
+            Remove-CertificatesByComputerName -ComputerName $CurrentName
+            $progressBar.Value = 80
+            # Enable LDAPS & disable LDAP
+            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true
+            $progressBar.Value = 90
             # Restart the computer
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
 
