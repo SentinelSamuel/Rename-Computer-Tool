@@ -5,8 +5,8 @@
 
 if(!(Test-Path "C:\old_computername.txt")) {
     # Define the path to the .psm1 file (adjust the path accordingly)
-    $modulePath = ".\DC-Modules.psm1"
-    
+    $modulePath = "$PSScriptRoot\DC-Modules.psm1"
+
     # Import modules
     Import-Module -Name $modulePath -ErrorAction Stop
     # Verify that the module was imported successfully
@@ -88,6 +88,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $okButton.Add_Click({    
         $NewMachineName = $textbox.Text
         if (Test-ValidMachineName -MachineName $NewMachineName) {
+            Start-Transcript -Path "$PSScriptRoot\Rename-DC.log" -Force
             Set-Content "C:\old_computername.txt" -Value $CurrentName
             $labelResult0.ForeColor = "DarkViolet"
             $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
@@ -125,6 +126,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Value = 90
             # Restart the computer
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
+            Stop-Transcript
             $progressBar.Value = 100
 
             $labelResult1.ForeColor = "Green"
