@@ -98,7 +98,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Location = New-Object System.Drawing.Point(20,160)
             $progressBar.Size = New-Object System.Drawing.Size(500, 20)
             $progressBar.ForeColor = "DarkViolet"
-            $progressBar.MarqueeAnimationSpeed = 30 # You can adjust the speed (milliseconds)
+            $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
             $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
             $Form1.Controls.Add($progressBar)
 
@@ -125,8 +125,8 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Value = 90
             # Restart the computer
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
-
             $progressBar.Value = 100
+
             $labelResult1.ForeColor = "Green"
             $labelResult1.Text = "Machine name changed successfully."
             $Form1.Controls.Add($labelResult1)
@@ -135,16 +135,16 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $Form1.Controls.Remove($labelResult1)
             $Form1.Controls.Remove($progressBar)
             $Form1.Update()
-            $labelResult1.Text = "Cannot change computer name, you have to enter a computer name in the text box." 
             $labelResult1.ForeColor = "Red"
+            $labelResult1.Text = "Cannot change computer name, you have to enter a computer name in the text box." 
             $Form1.Controls.Add($labelResult1)
         } else {
             $Form1.Controls.Remove($labelResult0)
             $Form1.Controls.Remove($labelResult1)
             $Form1.Controls.Remove($progressBar)
             $Form1.Update()
-            $labelResult1.Text = "Cannot change computer name from $CurrentName to $NewMachineName because it is not a valid computer name (no more than 15 caracters)." 
             $labelResult1.ForeColor = "Red"
+            $labelResult1.Text = "Cannot change computer name from $CurrentName to $NewMachineName because it is not a valid computer name (no more than 15 caracters)." 
             $Form1.Controls.Add($labelResult1)
         }
     })
@@ -157,8 +157,8 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $cancelButton.DialogResult = 1
     $cancelButton.Cursor = [System.Windows.Forms.Cursors]::Hand
     $cancelButton.Add_Click({
-        $labelResult1.Text = "Operation canceled."
         $labelResult1.ForeColor = "Red"
+        $labelResult1.Text = "Operation canceled."
     })
 
     # Add controls to form
