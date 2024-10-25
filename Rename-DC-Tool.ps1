@@ -122,7 +122,8 @@ if(!(Test-Path "C:\old_computername.txt")) {
             Remove-CertificatesByComputerName -ComputerName $CurrentName
             $progressBar.Value = 80
             # Enable LDAPS & disable LDAP
-            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot
+            $PasswordFilePath = $PSScriptRoot + "\LDAPS_CERT.txt"
+            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $PasswordFilePath
             $progressBar.Value = 90
             # Restart the computer
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
