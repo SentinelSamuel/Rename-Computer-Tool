@@ -45,7 +45,7 @@ For the task scheduler part :
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-6.png)
 </b>
 
-### 2) The initial source code of the exe is the .ps1 file 
+### 2) Screenshot of the UI 
 
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App.png)
 
