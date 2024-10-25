@@ -132,11 +132,15 @@ function Rename-DFSRTopology {
         # Get the domain DN dynamically
         $domainDN = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()).GetDirectoryEntry().DistinguishedName
         $dfsrDN = "CN=DFSR-GlobalSettings,CN=System,$domainDN"
+        
+        Write-Host "[+] Using DFSR path: $dfsrDN" -ForegroundColor Yellow
+
         # Find the DFSR computer object with the old name in the topology
         $oldDFSRObject = Get-ADObject -Filter { Name -eq $OldComputerName } -SearchBase $dfsrDN -ErrorAction Stop
+
         if ($oldDFSRObject) {
-            # Set the new name for the DFSR object
-            Set-ADObject -Identity $oldDFSRObject -NewName $NewComputerName -ErrorAction Stop
+            # Rename the DFSR object with the new name
+            Rename-ADObject -Identity $oldDFSRObject -NewName $NewComputerName -ErrorAction Stop
             Write-Host "[+] DFSR topology object renamed from '$OldComputerName' to '$NewComputerName' successfully." -ForegroundColor Green
         } else {
             Write-Host "[-] DFSR topology object with name '$OldComputerName' was not found." -ForegroundColor Red
@@ -146,6 +150,8 @@ function Rename-DFSRTopology {
         Write-Error "An error occurred: $_"
     }
 }
+
+
 
 # Configure WinRM over HTTPS by creating a certificate
 function Edit-WinRMHttps {
