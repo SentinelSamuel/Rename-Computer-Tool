@@ -107,10 +107,11 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Value = 0
             $DomainName = (Get-ADDomain).DNSRoot
             $DnsName = "$NewMachineName.$DomainName"
+            # Enable WinRM over HTTPS & disable HTTP
             Edit-WinRMHttps -DnsName $DnsName -ExportPath $PSScriptRoot
             $progressBar.Value = 15
             # Update new DNS computer Name 
-            Update-DnsForNewComputerName -NewComputerName $NewMachineName
+            Rename-DnsForNewComputerName -NewComputerName $NewMachineName
             $progressBar.Value = 35
             # Rename a specific topology AD object 
             Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
