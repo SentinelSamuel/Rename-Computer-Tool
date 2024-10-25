@@ -15,7 +15,10 @@ function Test-ValidMachineName {
     }
 }
 
-# Function to update DNS entries for a new computer name based on current IP address
+# Function to update DNS entries for a new computer name based on current IP address 
+<#
+#PAS FINIT A TRAVAILLER ###################################################################################################################################################
+#> 
 function Update-DnsForNewComputerName {
     param (
         [string]$NewComputerName
@@ -38,8 +41,7 @@ function Update-DnsForNewComputerName {
         $reverseZoneName = "$($domain -replace '\.', '.').in-addr.arpa"
 
         # Get DNS entries matching the current IP address in the forward lookup zone
-        $currentForwardEntries = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -ErrorAction SilentlyContinue `
-        | Where-Object { $_.RecordType -eq "A" -and $_.RecordData.IPv4Address -eq $newIp }
+        $currentForwardEntries = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -ErrorAction SilentlyContinue | Where-Object { $_.RecordType -eq "A" -and $_.RecordData.IPv4Address -eq $newIp }
 
         if ($currentForwardEntries) {
             foreach ($entry in $currentForwardEntries) {
@@ -52,8 +54,7 @@ function Update-DnsForNewComputerName {
         }
 
         # Get DNS entries matching the current IP address in the reverse lookup zone
-        $currentReverseEntries = Get-DnsServerResourceRecord -ZoneName $reverseZoneName -ErrorAction SilentlyContinue `
-        | Where-Object { $_.RecordType -eq "PTR" -and $_.RecordData.IPv4Address -eq $newIp }
+        $currentReverseEntries = Get-DnsServerResourceRecord -ZoneName $reverseZoneName -ErrorAction SilentlyContinue | Where-Object { $_.RecordType -eq "PTR" -and $_.RecordData.IPv4Address -eq $newIp }
 
         if ($currentReverseEntries) {
             foreach ($entry in $currentReverseEntries) {
@@ -124,7 +125,7 @@ function Edit-WinRMHttps {
         [string]$ExportPath,
 
         [Parameter(Mandatory=$false, HelpMessage="Specify the path to save the password. Default is .\WinRMHTTPS_passwd.txt.")]
-        [string]$PasswordFilePath = "$PSScriptRoot\WinRMHTTPS_passwd.txt"
+        [string]$FilePath = "$PSScriptRoot\WinRMHTTPS_passwd.txt"
     )
 
     # Ensure the export path is provided
@@ -166,8 +167,8 @@ function Edit-WinRMHttps {
     # Convert random password to SecureString
     $CertPassword = ConvertTo-SecureString -String $randomPassword -Force -AsPlainText
     # Save the generated password to a file
-    $randomPassword | Out-File -FilePath $PasswordFilePath -Force
-    Write-Host "[+] Password saved to : $PasswordFilePath" -ForegroundColor Green
+    $randomPassword | Out-File -FilePath $FilePath -Force
+    Write-Host "[+] Password saved to : $FilePath" -ForegroundColor Green
 
     # Generate a self-signed certificate
     try {
@@ -356,8 +357,8 @@ function Enable-LDAPS {
         [Parameter(Mandatory = $false, HelpMessage = "Specify the export path for the certificate. Default is '.\'")]
         [string]$ExportPath,
 
-        [Parameter(Mandatory = $false, HelpMessage = "Specify the path to save the password. Default is .\LDAPS_CERT.txt.")]
-        [string]$PasswordFilePath = "$PSScriptRoot\LDAPS_CERT.txt",
+        [Parameter(Mandatory = $false, HelpMessage = "Specify the path to save the password.")]
+        [string]$FilePath,
 
         [Parameter(Mandatory = $false, HelpMessage = "Specify whether to disable LDAP (port 389). Default is false.")]
         [bool]$DisableLDAP = $false
@@ -411,12 +412,13 @@ function Enable-LDAPS {
             }
 
             # Export the certificate to a .pfx file using the secure password
-            Export-PfxCertificate -Cert $certPath -FilePath "$ExportPath\ldaps.pfx" -Password $CertPassword
-            Write-Host "[+] Certificate exported to: $ExportPath\ldaps.pfx" -ForegroundColor Green
+            $exportFilePath = Join-Path -Path $ExportPath -ChildPath "ldaps.pfx"
+            Export-PfxCertificate -Cert $certPath -FilePath $exportFilePath -Password $CertPassword
+            Write-Host "[+] Certificate exported to: $exportFilePath" -ForegroundColor Green
 
             # Save the generated password to a file
-            $randomPassword | Out-File -FilePath $PasswordFilePath -Force
-            Write-Host "[+] Password saved to: $PasswordFilePath" -ForegroundColor Green
+            $randomPassword | Out-File -FilePath $FilePath -Force
+            Write-Host "[+] Password saved to: $FilePath" -ForegroundColor Green
         }
 
         # Bind the certificate to LDAPS (port 636) if not already bound
