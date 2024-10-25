@@ -112,9 +112,12 @@ if(!(Test-Path "C:\old_computername.txt")) {
             # Update new DNS computer Name 
             Update-DnsForNewComputerName -NewComputerName $NewMachineName
             $progressBar.Value = 35
+            # Rename a specific topology AD object 
+            Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
+            $progressBar.Value = 50
             # Rename Spns with the computer name
             Rename-SPNs -NewComputerName $NewMachineName
-            $progressBar.Value = 50
+            $progressBar.Value = 60
             # Remove old DNS Entries
             Remove-DnsEntries -ComputerName $CurrentName
             $progressBar.Value = 70
