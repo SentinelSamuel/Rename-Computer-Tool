@@ -78,6 +78,5 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
 ```
 
 ### 3) On error
-Nothing for now...
-
+If you got an error from the Rename-DnsForNewComputerName function, it could not be a problem (it search for every DNS entries so it can be wrong and try to rename something that doesnt exist)
 
