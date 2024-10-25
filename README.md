@@ -51,11 +51,12 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-6.png)
 <br/>
 
-### 2) Screenshot of the UI 
+### 2) Screenshots of the UI 
 
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/LaunchedInALab.png)
 
-### 4) Some Tips
+### 3) Some Tips
 ```
 - The maximum caracters of a computer name is 15
 - You cannot add sapces in the computer name
@@ -77,6 +78,6 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
   - After hitting the OK button, everything is logged in the script directory "Rename-DC.log"
 ```
 
-### 3) On error
+### 4) On error
 If you got an error from the Rename-DnsForNewComputerName function, it could not be a problem (it search for every DNS entries so it can be wrong and try to rename something that doesnt exist)
 
