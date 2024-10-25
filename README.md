@@ -33,19 +33,34 @@ Tips :
     The keys:
         HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for all users.
         HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for current user.
- 
-- ⚠️ FYI : The DC script is removing old certitficates, creating FW Rules to Enable LDAPS, disable LDAP, enable WinRM over HTTP, write every passwords in clear in a text file in C:\*.txt
 ```
 source : https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon
 
 ### 2) The initial source code of the exe is the .ps1 file 
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App.png)
 
-### 3) On error
-Nothing for now...
+### 4) Some Tips
 ```
 - The maximum caracters of a computer name is 15
-- There is a file created during the process, named old_computername.txt that will go on C:\old_computername.txt
- and will contain the old computer name, IF YOU REMOVE IT, YOU CAN RESTART THE SCRIPT
-- For the Rename-DC-Tool, it creates also a C:\WinRMHTTPS_passwd.txt that will contain the WinRM HTTPS Certificate (do not remove it) (SAME FOR LDAPS)
+- You cannot add sapces in the computer name
+- There is a file created during the process, named C:\old_computername.txt that will contains the old computer name and that allows you to not launch the script at every restarts of the computer
+- So if you delete C:\old_computername.txt, the script launch the pop-up again
+- The script is in Always On Top mod (it means that no Windows can go on the top of it so you are sure that you see it when it pops up)
+- For Rename-DC-Tool : 
+  - It uses a totally diffrent process, it uses DC-Modules.psm1 which is a PowerShell function file that will contain every functions used in the script
+  - It rename (if possible) every present SPNs in the DC with the new name
+  - It rename every DNS entries that were containing the old computer name pointing on the DC
+  - It remove every certificates that contains the old computer name in the subject
+  - It reset WinRM configuration (even if there is still a WinRM over HTTPS configured)
+  - It configure WinRM over HTTPS (creating a certificate that is placed in the script directory with its password file)
+  - It disable WinRM over HTTP 
+  - It disable LDAP
+  - It enable LDAPS (creating a certificate that is placed in the script directory with its password file)
+  - It creates Firewall Rules for WinRM over HTTPS & LDAPS
+  - It removes Firewall Rules for the disabling of LDAP
 ```
+
+### 3) On error
+Nothing for now...
+
+
