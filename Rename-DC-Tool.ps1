@@ -107,7 +107,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Value = 0
             $DomainName = (Get-ADDomain).DNSRoot
             $DnsName = "$NewMachineName.$DomainName"
-            Edit-WinRMHttps -DnsName $DnsName
+            Edit-WinRMHttps -DnsName $DnsName -ExportPath $PSScriptRoot
             $progressBar.Value = 15
             # Update new DNS computer Name 
             Update-DnsForNewComputerName -NewComputerName $NewMachineName
@@ -122,7 +122,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             Remove-CertificatesByComputerName -ComputerName $CurrentName
             $progressBar.Value = 80
             # Enable LDAPS & disable LDAP
-            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true
+            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot
             $progressBar.Value = 90
             # Restart the computer
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
