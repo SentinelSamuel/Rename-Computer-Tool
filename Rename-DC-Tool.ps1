@@ -110,7 +110,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             # Enable WinRM over HTTPS & disable HTTP
             Edit-WinRMHttps -DnsName $DnsName -ExportPath $PSScriptRoot
             $progressBar.Value = 15
-            # Update new DNS computer Name 
+            # Rename new DNS computer Name 
             Rename-DnsForNewComputerName -NewComputerName $NewMachineName
             $progressBar.Value = 35
             # Rename a specific topology AD object 
