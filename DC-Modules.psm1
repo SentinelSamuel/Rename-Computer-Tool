@@ -115,6 +115,38 @@ function Remove-DnsEntries {
     }
 }
 
+# Function to rename the DFSR topology object in AD
+function Rename-DFSRTopology {
+    param (
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the current (old) computer name.")]
+        [string]$OldComputerName,
+
+        [Parameter(Mandatory = $true, HelpMessage = "Enter the new computer name.")]
+        [string]$NewComputerName
+    )
+
+    try {
+        # Import the Active Directory module
+        Import-Module ActiveDirectory -ErrorAction Stop
+
+        # Get the domain DN dynamically
+        $domainDN = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()).GetDirectoryEntry().DistinguishedName
+        $dfsrDN = "CN=DFSR-GlobalSettings,CN=System,$domainDN"
+        # Find the DFSR computer object with the old name in the topology
+        $oldDFSRObject = Get-ADObject -Filter { Name -eq $OldComputerName } -SearchBase $dfsrDN -ErrorAction Stop
+        if ($oldDFSRObject) {
+            # Set the new name for the DFSR object
+            Set-ADObject -Identity $oldDFSRObject -NewName $NewComputerName -ErrorAction Stop
+            Write-Host "[+] DFSR topology object renamed from '$OldComputerName' to '$NewComputerName' successfully." -ForegroundColor Green
+        } else {
+            Write-Host "[-] DFSR topology object with name '$OldComputerName' was not found." -ForegroundColor Red
+        }
+    }
+    catch {
+        Write-Error "An error occurred: $_"
+    }
+}
+
 # Configure WinRM over HTTPS by creating a certificate
 function Edit-WinRMHttps {
     param (
