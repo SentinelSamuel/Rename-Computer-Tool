@@ -35,7 +35,7 @@ Tips :
         HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for current user.
 ```
 source : https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon
-</b>
+</b></b>
 For the task scheduler part : 
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-1.png)
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-2.png)
