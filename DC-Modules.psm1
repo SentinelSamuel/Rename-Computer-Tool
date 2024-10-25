@@ -15,11 +15,8 @@ function Test-ValidMachineName {
     }
 }
 
-# Function to update DNS entries for a new computer name based on current IP address 
-<#
-#PAS FINIT A TRAVAILLER ###################################################################################################################################################
-#> 
-function Update-DnsForNewComputerName {
+# Function to Rename DNS entries for a new computer name based on current IP address 
+function Rename-DnsForNewComputerName {
     param (
         [string]$NewComputerName
     )
@@ -29,7 +26,7 @@ function Update-DnsForNewComputerName {
         $newIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" -and $_.IPAddress }).IPAddress
         
         if (-not $newIp) {
-            Write-Error "[-] No active IPv4 address found. Cannot update DNS."
+            Write-Host "[-] No active IPv4 address found. Cannot Rename DNS entries." -ForegroundColor Red
             return
         }
 
@@ -76,7 +73,7 @@ function Update-DnsForNewComputerName {
         Write-Host "[+] Added new PTR DNS entry: $ptrName for $NewComputerName" -ForegroundColor Green
     }
     catch {
-        Write-Error "[-] Failed to update DNS entries. $_"
+        Write-Host "[-] Failed to Rename DNS entries. $_" -ForegroundColor Red
     }
 }
 
@@ -226,20 +223,6 @@ function Edit-WinRMHttps {
         return
     }
 
-    # Disable WinRM over HTTP if it exists
-    try {
-        $httpListener = winrm enumerate winrm/config/listener | Where-Object { $_ -like "*Transport=HTTP*" }
-        if ($httpListener) {
-            winrm delete winrm/config/Listener?Address=*+Transport=HTTP
-            Write-Host "[+] WinRM over HTTP has been disabled." -ForegroundColor Green
-        } else {
-            Write-Host "[i] No existing WinRM HTTP listener found, nothing to disable." -ForegroundColor Blue
-        }
-    } catch {
-        Write-Host "[-] Failed to disable WinRM over HTTP: $_" -ForegroundColor Red
-        return
-    }
-
     # Create or update the firewall rule for WinRM HTTPS
     $firewallRuleName = "WinRM HTTPS"
     $existingRule = Get-NetFirewallRule -Name $firewallRuleName -ErrorAction SilentlyContinue
@@ -289,6 +272,23 @@ function Edit-WinRMHttps {
     # Verify the WinRM listener configuration
     winrm enumerate winrm/config/listener
     Write-Host "[+] WinRM over HTTPS has been configured successfully." -ForegroundColor Green
+
+    # Disable WinRM over HTTP if it exists
+    try {
+        $httpListener = winrm enumerate winrm/config/listener | Where-Object { $_ -like "*Transport=HTTP*" }
+        if ($httpListener) {
+            winrm delete winrm/config/Listener?Address=*+Transport=HTTP
+            Write-Host "[+] WinRM over HTTP has been disabled." -ForegroundColor Green
+        } else {
+            Write-Host "[i] No existing WinRM HTTP listener found, nothing to disable." -ForegroundColor Blue
+        }
+    } catch {
+        Write-Host "[-] Failed to disable WinRM over HTTP: $_" -ForegroundColor Red
+        return
+    }
+    # Final verification of WinRM listeners
+    Write-Host "[*] Final WinRM Listener Configuration:" -ForegroundColor Cyan
+    winrm enumerate winrm/config/listener    
 }
 
 # Remove Certificates using computer name to filter
@@ -392,10 +392,10 @@ function Enable-LDAPS {
         [Parameter(Mandatory = $true, HelpMessage = "Enter the DNS name for the certificate.")]
         [string]$DnsName,
 
-        [Parameter(Mandatory = $false, HelpMessage = "Specify the export path for the certificate. Default is '.\'")]
+        [Parameter(Mandatory = $true, HelpMessage = "Specify the export path for the certificate.")]
         [string]$ExportPath,
 
-        [Parameter(Mandatory = $false, HelpMessage = "Specify the path to save the password.")]
+        [Parameter(Mandatory = $true, HelpMessage = "Specify the path to save the password.")]
         [string]$FilePath,
 
         [Parameter(Mandatory = $false, HelpMessage = "Specify whether to disable LDAP (port 389). Default is false.")]
@@ -431,32 +431,49 @@ function Enable-LDAPS {
         # Check if a certificate with the same DNS name already exists
         $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -match $DnsName }
         if ($existingCert) {
-            Write-Host "[i] Certificate with DNS name $DnsName already exists. Skipping certificate creation." -ForegroundColor Blue
-            $cert = $existingCert
+            Write-Host "[i] Certificate with DNS name $DnsName already exists. Removing existing certificate..." -ForegroundColor Blue
+            Remove-Item -Path "Cert:\LocalMachine\My\$($existingCert.Thumbprint)" -Force
+            Write-Host "[+] Existing certificate removed." -ForegroundColor Green
+        }
+
+        # Generate a new self-signed certificate for LDAPS
+        Write-Host "[+] Creating a self-signed certificate for $DnsName..." -ForegroundColor Yellow
+        $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -KeySpec KeyExchange
+
+        # Export the certificate to a .pfx file using a secure password
+        $thumbprint = $cert.Thumbprint
+        $certPath = "Cert:\LocalMachine\My\$thumbprint"
+        $randomPassword = Get-RandomPassword -length 20
+        $CertPassword = ConvertTo-SecureString -String $randomPassword -Force -AsPlainText
+
+        # Ensure the export directory exists
+        if (-Not (Test-Path -Path $ExportPath)) {
+            New-Item -Path $ExportPath -ItemType Directory | Out-Null
+        }
+
+        # Define the file path for the exported certificate
+        $exportFilePath = Join-Path -Path $ExportPath -ChildPath "ldaps.pfx"
+        Export-PfxCertificate -Cert $certPath -FilePath $exportFilePath -Password $CertPassword
+        Write-Host "[+] Certificate exported to: $exportFilePath" -ForegroundColor Green
+
+        # Verify if the certificate file exists
+        if (Test-Path -Path $exportFilePath) {
+            Write-Host "[+] Certificate file created successfully at $exportFilePath." -ForegroundColor Green
         } else {
-            # Generate a self-signed certificate for LDAPS
-            Write-Host "[+] Creating a self-signed certificate for $DnsName..." -ForegroundColor Yellow
-            $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -KeySpec KeyExchange
+            Write-Host "[-] Certificate file was not created successfully." -ForegroundColor Red
+            return
+        }
 
-            # Export the certificate if needed
-            $thumbprint = $cert.Thumbprint
-            $certPath = "Cert:\LocalMachine\My\$thumbprint"
-            $randomPassword = Get-RandomPassword -length 20
-            $CertPassword = ConvertTo-SecureString -String $randomPassword -Force -AsPlainText
+        # Save the generated password to the specified file
+        $randomPassword | Out-File -FilePath $FilePath -Force
+        Write-Host "[+] Password saved to: $FilePath" -ForegroundColor Green
 
-            # Ensure the export directory exists
-            if (-Not (Test-Path -Path $ExportPath)) {
-                New-Item -Path $ExportPath -ItemType Directory
-            }
-
-            # Export the certificate to a .pfx file using the secure password
-            $exportFilePath = Join-Path -Path $ExportPath -ChildPath "ldaps.pfx"
-            Export-PfxCertificate -Cert $certPath -FilePath $exportFilePath -Password $CertPassword
-            Write-Host "[+] Certificate exported to: $exportFilePath" -ForegroundColor Green
-
-            # Save the generated password to a file
-            $randomPassword | Out-File -FilePath $FilePath -Force
-            Write-Host "[+] Password saved to: $FilePath" -ForegroundColor Green
+        # Verify if the password file exists
+        if (Test-Path -Path $FilePath) {
+            Write-Host "[+] Password file created successfully at $FilePath." -ForegroundColor Green
+        } else {
+            Write-Host "[-] Password file was not created successfully." -ForegroundColor Red
+            return
         }
 
         # Bind the certificate to LDAPS (port 636) if not already bound
