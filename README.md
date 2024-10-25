@@ -69,7 +69,7 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
   - It remove every certificates that contains the old computer name in the subject
   - It reset WinRM configuration (even if there is still a WinRM over HTTPS configured)
   - It configure WinRM over HTTPS (creating a certificate that is placed in the script directory with its password file)
-  - It disable WinRM over HTTP (try 3 times before saying that it didn't work)
+  - It disable WinRM over HTTP (It try 3 times before saying that it didn't work)
   - It disable LDAP
   - It enable LDAPS (creating a certificate that is placed in the script directory with its password file)
   - It creates Firewall Rules for WinRM over HTTPS & LDAPS
