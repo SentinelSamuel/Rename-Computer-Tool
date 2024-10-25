@@ -42,6 +42,7 @@ For the task scheduler part :
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-3.png)
 ```
 The full script that is used here is :
+Action : Start a Program
 Program/Script : C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
 Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool\Rename-DC-Tool.ps1 -WindowStyle Hidden
 ```
