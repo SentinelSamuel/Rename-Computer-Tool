@@ -148,8 +148,6 @@ function Rename-DFSRTopology {
     }
 }
 
-
-
 # Configure WinRM over HTTPS by creating a certificate
 function Edit-WinRMHttps {
     param (
@@ -269,26 +267,36 @@ function Edit-WinRMHttps {
         return
     }
 
-    # Verify the WinRM listener configuration
-    winrm enumerate winrm/config/listener
-    Write-Host "[+] WinRM over HTTPS has been configured successfully." -ForegroundColor Green
-
-    # Disable WinRM over HTTP if it exists
-    try {
-        $httpListener = winrm enumerate winrm/config/listener | Where-Object { $_ -like "*Transport=HTTP*" }
-        if ($httpListener) {
+    # Forcefully disable WinRM over HTTP if it exists
+    $maxRetries = 3
+    $retryCount = 0
+    while ($retryCount -lt $maxRetries) {
+        try {
+            # Attempt to delete the HTTP listener
             winrm delete winrm/config/Listener?Address=*+Transport=HTTP
-            Write-Host "[+] WinRM over HTTP has been disabled." -ForegroundColor Green
-        } else {
-            Write-Host "[i] No existing WinRM HTTP listener found, nothing to disable." -ForegroundColor Blue
+            Write-Host "[+] Attempted to disable WinRM over HTTP." -ForegroundColor Green
+
+            # Verify HTTP listener is gone
+            $httpListenerExists = winrm enumerate winrm/config/listener | Where-Object { $_ -like "*Transport=HTTP*" }
+            if (-not $httpListenerExists) {
+                Write-Host "[+] WinRM HTTP listener successfully disabled." -ForegroundColor Green
+                break
+            } else {
+                Write-Host "[!] HTTP listener still present. Retrying..." -ForegroundColor Yellow
+            }
+        } catch {
+            Write-Host "[-] Error disabling WinRM HTTP listener: $_" -ForegroundColor Red
         }
-    } catch {
-        Write-Host "[-] Failed to disable WinRM over HTTP: $_" -ForegroundColor Red
-        return
+        $retryCount++
+        Start-Sleep -Seconds 2
     }
-    # Final verification of WinRM listeners
-    Write-Host "[*] Final WinRM Listener Configuration:" -ForegroundColor Cyan
-    winrm enumerate winrm/config/listener    
+
+    # Check if the HTTP listener still exists after retries
+    if ($httpListenerExists) {
+        Write-Host "[-] HTTP listener could not be disabled after multiple attempts. Manual intervention may be required." -ForegroundColor Red
+    } else {
+        Write-Host "[+] Confirmed: WinRM is configured for HTTPS only." -ForegroundColor Green
+    }
 }
 
 # Remove Certificates using computer name to filter
