@@ -35,8 +35,18 @@ Tips :
         HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run - Runs programs for current user.
 ```
 source : https://stackoverflow.com/questions/24250303/additional-ways-of-running-programs-at-logon
+</b>
+For the task scheduler part : 
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-1.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-2.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-3.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-4.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-5.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-6.png)
+</b>
 
 ### 2) The initial source code of the exe is the .ps1 file 
+
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App.png)
 
 ### 4) Some Tips
