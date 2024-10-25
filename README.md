@@ -58,6 +58,7 @@ source : https://stackoverflow.com/questions/24250303/additional-ways-of-running
   - It enable LDAPS (creating a certificate that is placed in the script directory with its password file)
   - It creates Firewall Rules for WinRM over HTTPS & LDAPS
   - It removes Firewall Rules for the disabling of LDAP
+  - After hitting the OK button, everything is logged in the script directory "Rename-DC.log"
 ```
 
 ### 3) On error
