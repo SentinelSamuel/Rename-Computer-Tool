@@ -29,7 +29,7 @@ function Update-DnsForNewComputerName {
         $newIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" -and $_.IPAddress }).IPAddress
         
         if (-not $newIp) {
-            Write-Error "No active IPv4 address found. Cannot update DNS."
+            Write-Error "[-] No active IPv4 address found. Cannot update DNS."
             return
         }
 
@@ -76,7 +76,7 @@ function Update-DnsForNewComputerName {
         Write-Host "[+] Added new PTR DNS entry: $ptrName for $NewComputerName" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to update DNS entries. $_"
+        Write-Error "[-] Failed to update DNS entries. $_"
     }
 }
 
@@ -111,7 +111,7 @@ function Remove-DnsEntries {
         }
     }
     catch {
-        Write-Error "Failed to remove DNS entries. $_"
+        Write-Error "[-] Failed to remove DNS entries. $_"
     }
 }
 
@@ -147,7 +147,7 @@ function Rename-DFSRTopology {
         }
     }
     catch {
-        Write-Error "An error occurred: $_"
+        Write-Error "[-] An error occurred: $_"
     }
 }
 
@@ -344,7 +344,7 @@ function Remove-CertificatesByComputerName {
         }
 
     } catch {
-        Write-Error "An error occurred while attempting to remove certificates. $_"
+        Write-Error " [-] An error occurred while attempting to remove certificates. $_"
     }
 }
 
@@ -382,7 +382,7 @@ function Rename-SPNs {
         Write-Output "All SPNs renamed successfully."
     }
     catch {
-        Write-Error "Failed to rename SPNs. $_"
+        Write-Error "[-] Failed to rename SPNs. $_"
     }
 }
 
@@ -483,7 +483,7 @@ function Enable-LDAPS {
             if ($firewallRule) {
                 Write-Host "[+] Firewall rule created for LDAPS (port 636)" -ForegroundColor Green
             } else {
-                Write-Error "[!] Failed to create firewall rule for LDAPS."
+                Write-Error "[-] Failed to create firewall rule for LDAPS."
             }
         }
 
@@ -521,6 +521,6 @@ function Enable-LDAPS {
         Write-Host "[+] LDAPS configuration completed successfully." -ForegroundColor Green
     }
     catch {
-        Write-Error "An error occurred: $_"
+        Write-Error "[-] An error occurred: $_"
     }
 }
