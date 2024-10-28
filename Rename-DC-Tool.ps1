@@ -6,6 +6,7 @@
     Done : June 27th 2024
     Rewritten : October 24th 2024 
     Change launch.ps1 to launch this script
+    Find the script : https://github.com/SentinelSamuel/Rename-Computer-Tool
 #>
 
 if(!(Test-Path "C:\old_computername.txt")) {
