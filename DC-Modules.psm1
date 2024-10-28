@@ -182,8 +182,13 @@ function Enable-WinRMHTTPS {
 #>
 function Rename-DnsForNewComputerName {
     param (
-        [string]$NewComputerName
+        [Parameter(Mandatory = $true)]
+        [string]$NewComputerName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$DomainName
     )
+
     # Retrieve the first active network interface with an IPv4 address (excluding loopback)
     $newIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" -and $_.IPAddress }).IPAddress
 
@@ -191,40 +196,46 @@ function Rename-DnsForNewComputerName {
         Write-Host "[-] No active IPv4 address found. Cannot Rename DNS entries." -ForegroundColor Red
         return
     }
-    # Get the domain name from Active Directory configuration
-    $domain = (Get-ADDomain).DNSRoot
-    # Construct the DNS zone names
-    $forwardZoneName = $domain
-    $reverseZoneName = "$($domain -replace '\.', '.').in-addr.arpa"
-    # Get DNS entries matching the current IP address in the forward lookup zone
-    $currentForwardEntries = Get-DnsServerResourceRecord -ZoneName $forwardZoneName -ErrorAction SilentlyContinue | Where-Object { $_.RecordType -eq "A" -and $_.RecordData.IPv4Address -eq $newIp }
-    if ($currentForwardEntries) {
-        foreach ($entry in $currentForwardEntries) {
-            # Remove DNS entry matching the current IP address from forward lookup zone
-            Remove-DnsServerResourceRecord -ZoneName $forwardZoneName -InputObject $entry -Force
-            Write-Host "[i] Removed DNS entry for IP $($entry.RecordData.IPv4Address): $($entry.Name)" -ForegroundColor Blue
+
+    # Define the DNS zone paths
+    $zonePaths = @(
+        "_msdcs.$DomainName/dc/_sites/Default-First-Site-Name/_tcp",
+        "_msdcs.$DomainName/dc/_tcp",
+        "_msdcs.$DomainName/domains/822f01e4-2f70-4320-8a67-7d1f217dba2d/_tcp",
+        "_msdcs.$DomainName/gc/_sites/Default-First-Site-Name/_tcp",
+        "_msdcs.$DomainName/gc/_tcp",
+        "_msdcs.$DomainName/pdc/_tcp",
+        "$DomainName/_msdcs",
+        "$DomainName/_sites/Default-First-Site-Name/_tcp",
+        "$DomainName/_tcp",
+        "$DomainName/_udp",
+        "$DomainName/DomainDnsZones/_sites/Default-First-Site-Name/_tcp",
+        "$DomainName/DomainDnsZones/_tcp",
+        "$DomainName/ForestDnsZones/_sites/Default-First-Site-Name/_tcp",
+        "$DomainName/ForestDnsZones/_tcp"
+    )
+
+    try {
+        foreach ($zonePath in $zonePaths) {
+            # Get all DNS records in the current zone path
+            $dnsRecords = Get-DnsServerResourceRecord -ZoneName $DomainName -ErrorAction Stop | Where-Object { $_.HostName -like "*$currentComputerName*" }
+
+            foreach ($record in $dnsRecords) {
+                # Construct the full record name
+                $fullRecordName = $record.HostName
+
+                # Remove the old record
+                Remove-DnsServerResourceRecord -ZoneName $DomainName -InputObject $record -Force
+
+                # Add the new record with the new computer name
+                Add-DnsServerResourceRecordA -ZoneName $DomainName -Name $NewComputerName -IPv4Address $newIp -ErrorAction Stop
+
+                Write-Host "[+] Renamed DNS record: $fullRecordName to $NewComputerName with IP $newIp" -ForegroundColor Green
+            }
         }
-    } else {
-        Write-Host "[i] No existing DNS entries found for IP $newIp in forward lookup zone $forwardZoneName." -ForegroundColor Blue
+    } catch {
+        Write-Host "[-] An error occurred: $_" -ForegroundColor Red
     }
-    # Get DNS entries matching the current IP address in the reverse lookup zone
-    $currentReverseEntries = Get-DnsServerResourceRecord -ZoneName $reverseZoneName -ErrorAction SilentlyContinue | Where-Object { $_.RecordType -eq "PTR" -and $_.RecordData.IPv4Address -eq $newIp }
-    if ($currentReverseEntries) {
-        foreach ($entry in $currentReverseEntries) {
-            # Remove DNS entry matching the current IP address from reverse lookup zone
-            Remove-DnsServerResourceRecord -ZoneName $reverseZoneName -InputObject $entry -Force
-            Write-Host "[i] Removed DNS PTR entry for IP $($entry.RecordData.IPv4Address): $($entry.Name)" -ForegroundColor Blue
-        }
-    } else {
-        Write-Host "[i] No existing DNS PTR entries found for IP $newIp in reverse lookup zone $reverseZoneName." -ForegroundColor Blue
-    }
-    # Add new DNS entry for the new computer name in the forward lookup zone
-    Add-DnsServerResourceRecordA -ZoneName $forwardZoneName -Name $NewComputerName -IPv4Address $newIp -ErrorAction Stop
-    Write-Host "[+] Added new DNS entry: $NewComputerName with IP $newIp" -ForegroundColor Green
-    # Add new PTR DNS entry for the new computer name in reverse lookup zone
-    $ptrName = "$($newIp.Split('.')[3]).in-addr.arpa"
-    Add-DnsServerResourceRecordPtr -ZoneName $reverseZoneName -Name $ptrName -PtrDomainName $NewComputerName -ErrorAction Stop
-    Write-Host "[+] Added new PTR DNS entry: $ptrName for $NewComputerName" -ForegroundColor Green
 }
 
 <#
@@ -233,6 +244,7 @@ function Rename-DnsForNewComputerName {
 #>
 function Remove-DnsEntries {
     param (
+        [Parameter(Mandatory = $true)]
         [string]$ComputerName
     )
     try {
