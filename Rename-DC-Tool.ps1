@@ -95,7 +95,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
         $NewMachineName = $textbox.Text
         if (Test-ValidMachineName -MachineName $NewMachineName) {
             Start-Transcript -Path "$PSScriptRoot\Rename-DC.log" -Force
-            Set-Content "C:\old_computername.txt" -Value $CurrentName
+          #  Set-Content "C:\old_computername.txt" -Value $CurrentName
             $labelResult0.ForeColor = "DarkViolet"
             $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
             $Form1.Controls.Add($labelResult0)
@@ -113,33 +113,44 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Value = 0
             $DomainName = (Get-ADDomain).DNSRoot
             $DnsName = "$NewMachineName.$DomainName"
-            # Enable WinRM over HTTPS & disable HTTP
-            Edit-WinRMHttps -DnsName $DnsName -ExportPath $PSScriptRoot
+
+            # Fully disable WinRM configuration
+            Clear-WinRMConfiguration
+
+            # Enable WinRM over HTTPS
+            $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
+            Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
             $progressBar.Value = 15
+
             # Rename new DNS computer Name 
             Rename-DnsForNewComputerName -NewComputerName $NewMachineName
             $progressBar.Value = 35
+
             # Rename a specific topology AD object 
             Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
             $progressBar.Value = 50
+
             # Rename Spns with the computer name
             Rename-SPNs -NewComputerName $NewMachineName
             $progressBar.Value = 60
+
             # Remove old DNS Entries
             Remove-DnsEntries -ComputerName $CurrentName
             $progressBar.Value = 70
+
             # Remove old Certificates
             Remove-CertificatesByComputerName -ComputerName $CurrentName
             $progressBar.Value = 80
+
             # Enable LDAPS & disable LDAP
-            $PasswordFilePath = $PSScriptRoot + "\LDAPS_CERT.txt"
-            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $PasswordFilePath
+            $LDAPS_CERT = $PSScriptRoot + "\LDAPS-Cert.txt"
+            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $LDAPS
             $progressBar.Value = 90
+
             # Restart the computer
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
             Stop-Transcript
             $progressBar.Value = 100
-
             $labelResult1.ForeColor = "Green"
             $labelResult1.Text = "Machine name changed successfully."
             $Form1.Controls.Add($labelResult1)
