@@ -425,7 +425,7 @@ function Enable-LDAPS {
         return -join $result
     }
     try {
-        Write-Host "[+] Starting LDAPS configuration process..." -ForegroundColor Yellow
+        Write-Host "[i] Starting LDAPS configuration process..." -ForegroundColor Blue
         # Check if a certificate with the same DNS name already exists
         $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -match $DnsName }
         if ($existingCert) {
@@ -434,7 +434,7 @@ function Enable-LDAPS {
             Write-Host "[+] Existing certificate removed." -ForegroundColor Green
         }
         # Generate a new self-signed certificate for LDAPS
-        Write-Host "[+] Creating a self-signed certificate for $DnsName..." -ForegroundColor Yellow
+        Write-Host "[i] Creating a self-signed certificate for $DnsName..." -ForegroundColor Blue
         $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -KeySpec KeyExchange
         # Export the certificate to a .pfx file using a secure password
         $thumbprint = $cert.Thumbprint
@@ -471,7 +471,7 @@ function Enable-LDAPS {
         if ($bindingCheck) {
             Write-Host "[i] LDAPS is already bound to port 636. Skipping binding." -ForegroundColor Blue
         } else {
-            Write-Host "[+] Binding the certificate to LDAPS (port 636)..." -ForegroundColor Yellow
+            Write-Host "[i] Binding the certificate to LDAPS (port 636)..." -ForegroundColor Blue
             New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapsslport" -Value 636 -PropertyType Dword -Force
             Write-Host "[+] Certificate bound to LDAPS (port 636)" -ForegroundColor Green
         }
@@ -481,7 +481,7 @@ function Enable-LDAPS {
             Write-Host "[i] Firewall rule for LDAPS (port 636) already exists." -ForegroundColor Blue
         } else {
             # Open the firewall port for LDAPS
-            Write-Host "[+] Opening firewall port for LDAPS (port 636)..." -ForegroundColor Yellow
+            Write-Host "[i] Opening firewall port for LDAPS (port 636)..." -ForegroundColor Blue
             New-NetFirewallRule -Name "LDAPS Port 636" -DisplayName "LDAPS" -Enabled True -Direction Inbound -Protocol TCP -LocalPort 636 -Action Allow
             # Verify the firewall rule
             $firewallRule = Get-NetFirewallRule -DisplayName "LDAPS" -ErrorAction SilentlyContinue
@@ -513,7 +513,7 @@ function Enable-LDAPS {
             if ($ldapPort -and $ldapPort.ldapport -eq 0) {
                 Write-Host "[i] LDAP (port 389) is already disabled in NTDS settings." -ForegroundColor Blue
             } else {
-                Write-Host "[+] Disabling regular LDAP (port 389) in NTDS settings..." -ForegroundColor Yellow
+                Write-Host "[i] Disabling regular LDAP (port 389) in NTDS settings..." -ForegroundColor Blue
                 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapport" -Value 0 -PropertyType Dword -Force
                 Write-Host "[+] Regular LDAP (port 389) has been disabled in NTDS settings." -ForegroundColor Green
             }
