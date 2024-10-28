@@ -1,7 +1,12 @@
-# By Samuel PAGES 
-# Done : June 27th 2024
-# Rewritten : October 24th 2024 
-# Change launch.ps1 to launch this script
+<#
+.DESCRIPTION
+    Can rename a classic computer and a DC as well (using Rename-DC-Tool.ps1) Is able to configure WinRM over HTTPS & Enable LDAPS and rename some SPNs.
+.NOTES
+    By Samuel PAGES 
+    Done : June 27th 2024
+    Rewritten : October 24th 2024 
+    Change launch.ps1 to launch this script
+#>
 
 if(!(Test-Path "C:\old_computername.txt")) {
     # Define the path to the .psm1 file (adjust the path accordingly)
