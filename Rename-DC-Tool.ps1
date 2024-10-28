@@ -95,7 +95,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
         $NewMachineName = $textbox.Text
         if (Test-ValidMachineName -MachineName $NewMachineName) {
             Start-Transcript -Path "$PSScriptRoot\Rename-DC.log" -Force
-          #  Set-Content "C:\old_computername.txt" -Value $CurrentName
+            Set-Content "C:\old_computername.txt" -Value $CurrentName
             $labelResult0.ForeColor = "DarkViolet"
             $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
             $Form1.Controls.Add($labelResult0)
