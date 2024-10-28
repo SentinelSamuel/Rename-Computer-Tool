@@ -8,8 +8,12 @@ function Test-ValidMachineName {
     )
     # Define the regex pattern for a valid machine name
     $machineNameRegex = "^[a-zA-Z0-9-]+$"
-    # Check if the input string matches the regex pattern and is 15 characters or less
-    if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15) {
+    
+    # Get the current computer name (use [Environment]::MachineName or $env:COMPUTERNAME if Get-ComputerInfo is not available)
+    $currentComputerName = (Get-ComputerInfo).CsName
+    
+    # Check if the input string matches the regex pattern, is 15 characters or less, and is different from the current computer name
+    if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15 -and $MachineName -ne $currentComputerName) {
         return $true
     } else {
         return $false
