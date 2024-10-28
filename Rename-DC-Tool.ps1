@@ -123,7 +123,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             $progressBar.Value = 15
 
             # Rename new DNS computer Name 
-            Rename-DnsForNewComputerName -NewComputerName $NewMachineName
+            Rename-DnsForNewComputerName -NewComputerName $NewMachineName -DomainName $DomainName
             $progressBar.Value = 35
 
             # Rename a specific topology AD object 
