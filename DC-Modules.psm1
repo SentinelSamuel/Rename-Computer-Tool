@@ -1,4 +1,7 @@
-# Validate the new Machine Name
+<#
+.DESCRIPTION
+    Validate the new Machine Name
+#>
 function Test-ValidMachineName {
     param (
         [string]$MachineName
@@ -15,7 +18,10 @@ function Test-ValidMachineName {
     }
 }
 
-# Function to Rename DNS entries for a new computer name based on current IP address 
+<#
+.DESCRIPTION
+    Function to Rename DNS entries for a new computer name based on current IP address 
+#>
 function Rename-DnsForNewComputerName {
     param (
         [string]$NewComputerName
@@ -77,7 +83,10 @@ function Rename-DnsForNewComputerName {
     }
 }
 
-# Removes DNS Entries of the DC
+<#
+.DESCRIPTION
+    Removes DNS Entries of the DC
+#>
 function Remove-DnsEntries {
     param (
         [string]$ComputerName
@@ -112,7 +121,10 @@ function Remove-DnsEntries {
     }
 }
 
-# Function to rename the DFSR topology object in AD
+<#
+.DESCRIPTION
+    Rename the DFSR topology object in AD
+#>
 function Rename-DFSRTopology {
     param (
         [Parameter(Mandatory = $true, HelpMessage = "Enter the current (old) computer name.")]
@@ -148,7 +160,10 @@ function Rename-DFSRTopology {
     }
 }
 
-# Configure WinRM over HTTPS by creating a certificate
+<#
+.DESCRIPTION
+    Configure WinRM over HTTPS by creating a certificate & Disable WinRM over HTTP
+#>
 function Edit-WinRMHttps {
     param (
         [Parameter(Mandatory=$true, HelpMessage="Enter the DNS name for the certificate.")]
@@ -299,7 +314,10 @@ function Edit-WinRMHttps {
     }
 }
 
-# Remove Certificates using computer name to filter
+<#
+.DESCRIPTION
+    Remove Certificates using computer name to filter
+#>
 function Remove-CertificatesByComputerName {
     param (
         [Parameter(Mandatory = $true)]
@@ -356,7 +374,10 @@ function Remove-CertificatesByComputerName {
     }
 }
 
-# Rename SPNs if there is
+<#
+.DESCRIPTION
+    Rename SPNs if there is
+#>
 function Rename-SPNs {
     param (
         [Parameter(Mandatory=$true)]
@@ -394,7 +415,10 @@ function Rename-SPNs {
     }
 }
 
-# Enable LDAPS
+<#
+.DESCRIPTION
+    Enable LDAPS & is able to disable LDAP
+#>
 function Enable-LDAPS {
     param (
         [Parameter(Mandatory = $true, HelpMessage = "Enter the DNS name for the certificate.")]
@@ -548,4 +572,5 @@ function Enable-LDAPS {
     catch {
         Write-Error "[-] An error occurred: $_"
     }
+
 }
