@@ -115,6 +115,7 @@ function Enable-WinRMHTTPS {
         Write-Host "[-] Error creating certificate: $_" -ForegroundColor Red
         return
     }
+    
     # Export the certificate to a .pfx file
     $CertFilePath = Join-Path -Path $ExportPath -ChildPath "$CertFileName.pfx"
     try {
@@ -125,6 +126,7 @@ function Enable-WinRMHTTPS {
         Write-Host "[-] Failed to export the certificate: $_" -ForegroundColor Red
         return
     }
+
     # Ensure WinRM service is configured
     try {
         winrm quickconfig -q
@@ -134,6 +136,7 @@ function Enable-WinRMHTTPS {
         Write-Host "[-] Failed to configure WinRM service: $_" -ForegroundColor Red
         return
     }
+
     # Create the WinRM HTTPS listener
     try {
         winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$DnsName`";CertificateThumbprint=`"$($cert.Thumbprint)`"}"
@@ -144,6 +147,33 @@ function Enable-WinRMHTTPS {
     }
     winrm delete winrm/config/Listener?Address=*+Transport=HTTP
     Write-Host "[+] WinRM Over HTTP Disabled" -ForegroundColor Green
+
+    # Check for existing firewall rule for WinRM HTTPS (port 5986), and add it if not present
+    try {
+        $firewallRule = (Get-NetFirewallRule | Where-Object {($_.LocalPorts -contains '5986')}) -or (Get-NetFirewallRule -DisplayName "WinRM HTTPS" -ErrorAction SilentlyContinue)
+        if (-not $firewallRule) {
+            New-NetFirewallRule -DisplayName "WinRM HTTPS" -Direction Inbound -Protocol TCP -LocalPort 5986 -Action Allow
+            Write-Host "[+] Firewall rule for WinRM HTTPS created." -ForegroundColor Green
+        } else {
+            Write-Host "[i] Firewall rule for WinRM HTTPS already exists." -ForegroundColor Blue
+        }
+    }
+    catch {
+        Write-Host "[-] Error checking or creating firewall rule: $_" -ForegroundColor Red
+    }
+
+    # Remove firewall rule for WinRM over HTTP if it exists
+    try {
+        $httpFirewallRule = Get-NetFirewallRule | Where-Object {($_.LocalPorts -contains '5985')}
+        if ($httpFirewallRule) {
+            Remove-NetFirewallRule -InputObject $httpFirewallRule
+            Write-Host "[+] Firewall rule for WinRM over HTTP has been removed." -ForegroundColor Green
+        } else {
+            Write-Host "[i] No firewall rule for WinRM over HTTP found." -ForegroundColor Blue
+        }
+    } catch {
+        Write-Host "[-] Error occurred while checking or removing firewall rule for WinRM over HTTP: $_" -ForegroundColor Red
+    }
 }
 
 <#
