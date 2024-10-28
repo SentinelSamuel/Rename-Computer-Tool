@@ -144,7 +144,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
             # Enable LDAPS & disable LDAP
             $LDAPS_CERT = $PSScriptRoot + "\LDAPS-Cert.txt"
-            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $LDAPS
+            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $LDAPS_CERT
             $progressBar.Value = 90
 
             # Restart the computer
