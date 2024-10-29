@@ -116,12 +116,12 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
             # Fully disable WinRM configuration
             Clear-WinRMConfiguration
-            $progressBar.Value = 15
+            $progressBar.Value = 10
 
             # Enable WinRM over HTTPS
             $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
             Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
-            $progressBar.Value = 30
+            $progressBar.Value = 40
 
             # Rename a specific topology AD object 
             Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
@@ -144,6 +144,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
             Rename-Computer -NewName $NewMachineName -PassThru -Restart
             Stop-Transcript
             $progressBar.Value = 100
+
             $labelResult1.ForeColor = "Green"
             $labelResult1.Text = "Machine name changed successfully."
             $Form1.Controls.Add($labelResult1)
