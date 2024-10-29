@@ -73,6 +73,7 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
   - It uses a totally diffrent process, it uses DC-Modules.psm1 which is a PowerShell function file that will contain every functions used in the script
   - It rename (if possible) every present SPNs in the DC with the new name
   - It rename every DNS entries that were containing the old computer name pointing on the DC (TO BE DONE, IS NOT DONE ANYMORE BECAUSE THERE IS TOO MUCH ERRORS)
+    (Rename every DNS Entries before changing the DC Name is not really pertinent because most of them will update themself)
   - It remove every certificates that contains the old computer name in the subject
   - It reset WinRM configuration (even if there is still a WinRM over HTTPS configured)
   - It configure WinRM over HTTPS (creating a certificate that is placed in the script directory with its password file)
