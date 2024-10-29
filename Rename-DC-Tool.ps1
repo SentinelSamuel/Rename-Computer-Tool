@@ -54,13 +54,13 @@ if(!(Test-Path "C:\old_computername.txt")) {
     # Create label
     $labelPrompt = New-Object System.Windows.Forms.Label
     $labelPrompt.Text = "To make this Environment useable by all the SEs, you must change the machine name. Please enter the computer name right here :"
-    $labelPrompt.Size = New-Object System.Drawing.Size(250,40)
+    $labelPrompt.Size = New-Object System.Drawing.Size(250,50)
     $labelPrompt.AutoSize = $false
     $labelPrompt.Location = New-Object System.Drawing.Point(20,25)
 
     # Create textbox
     $textbox = New-Object System.Windows.Forms.TextBox
-    $textbox.Location = New-Object System.Drawing.Point(20,70)
+    $textbox.Location = New-Object System.Drawing.Point(20,90)
     $textbox.Size = New-Object System.Drawing.Size(250,20)
 
     # Add picture
@@ -86,68 +86,73 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create OK button
     $okButton = New-Object System.Windows.Forms.Button
-    $okButton.Location = New-Object System.Drawing.Point(20,100)
+    $okButton.Location = New-Object System.Drawing.Point(20,120)
     $okButton.Size = New-Object System.Drawing.Size(75,23)
     $okButton.Cursor = [System.Windows.Forms.Cursors]::Hand
     $okButton.Text = "OK"
     $okButton.DialogResult = 0
     $okButton.Add_Click({    
         $NewMachineName = $textbox.Text
-        if (Test-ValidMachineName -MachineName $NewMachineName) {
-            Start-Transcript -Path "$PSScriptRoot\Rename-DC.log" -Force
-            Set-Content "C:\old_computername.txt" -Value $CurrentName
-            $labelResult0.ForeColor = "DarkViolet"
-            $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
-            $Form1.Controls.Add($labelResult0)
+        Start-Transcript -Path "$PSScriptRoot\Rename-DC.log" -Force
+        if ($PSVersionTable.PSVersion.Major -ge 5 -and $PSVersionTable.PSVersion.Minor -ge 1) {
+            Write-Host "[+] Supported PowerShell Version $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)" -ForegroundColor Green
+            if (Test-ValidMachineName -MachineName $NewMachineName) {
+                Set-Content "C:\old_computername.txt" -Value $CurrentName
+                $labelResult0.ForeColor = "DarkViolet"
+                $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
+                $Form1.Controls.Add($labelResult0)
 
-            # Create progress bar
-            $progressBar = New-Object System.Windows.Forms.ProgressBar
-            $progressBar.Location = New-Object System.Drawing.Point(20,160)
-            $progressBar.Size = New-Object System.Drawing.Size(500, 20)
-            $progressBar.ForeColor = "DarkViolet"
-            $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
-            $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
-            $Form1.Controls.Add($progressBar)
+                # Create progress bar
+                $progressBar = New-Object System.Windows.Forms.ProgressBar
+                $progressBar.Location = New-Object System.Drawing.Point(20,160)
+                $progressBar.Size = New-Object System.Drawing.Size(500, 20)
+                $progressBar.ForeColor = "DarkViolet"
+                $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
+                $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
+                $Form1.Controls.Add($progressBar)
 
-            # Simulate a progress bar
-            $progressBar.Value = 0
-            $DomainName = (Get-ADDomain).DNSRoot
-            $DnsName = "$NewMachineName.$DomainName"
+                # Simulate a progress bar
+                $progressBar.Value = 0
+                $DomainName = (Get-ADDomain).DNSRoot
+                $DnsName = "$NewMachineName.$DomainName"
 
-            # Fully disable WinRM configuration
-            Clear-WinRMConfiguration
-            $progressBar.Value = 10
+                # Fully disable WinRM configuration
+                Clear-WinRMConfiguration
+                $progressBar.Value = 10
 
-            # Enable WinRM over HTTPS
-            $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
-            Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
-            $progressBar.Value = 40
+                # Enable WinRM over HTTPS
+                $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
+                Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
+                $progressBar.Value = 40
 
-            # Rename a specific topology AD object 
-            Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
-            $progressBar.Value = 60
+                # Rename a specific topology AD object 
+                Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
+                $progressBar.Value = 60
 
-            # Rename Spns with the computer name
-            Rename-SPNs -NewComputerName $NewMachineName
-            $progressBar.Value = 70
+                # Rename Spns with the computer name
+                Rename-SPNs -NewComputerName $NewMachineName
+                $progressBar.Value = 70
 
-            # Remove old Certificates
-            Remove-CertificatesByComputerName -ComputerName $CurrentName
-            $progressBar.Value = 80
+                # Remove old Certificates
+                Remove-CertificatesByComputerName -ComputerName $CurrentName
+                $progressBar.Value = 80
 
-            # Enable LDAPS & disable LDAP
-            $LDAPS_CERT = $PSScriptRoot + "\LDAPS-Cert.txt"
-            Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $LDAPS_CERT
-            $progressBar.Value = 90
+                # Enable LDAPS & disable LDAP
+                $LDAPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "LDAPS-Cert.txt"
+                Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $LDAPS_CERT
+                $progressBar.Value = 90
 
-            # Restart the computer
-            Rename-Computer -NewName $NewMachineName -PassThru -Restart
-            Stop-Transcript
-            $progressBar.Value = 100
+                # Restart the computer
+                Rename-Computer -NewName $NewMachineName -PassThru -Restart
+                $progressBar.Value = 100
+                Stop-Transcript
 
-            $labelResult1.ForeColor = "Green"
-            $labelResult1.Text = "Machine name changed successfully."
-            $Form1.Controls.Add($labelResult1)
+                $labelResult1.ForeColor = "Green"
+                $labelResult1.Text = "Machine name changed successfully."
+                $Form1.Controls.Add($labelResult1)
+            } elseif (($PSVersionTable.PSVersion.Major -eq 5 -and $PSVersionTable.PSVersion.Minor -lt 1) -or ($PSVersionTable.PSVersion.Major -le 4)) {
+                Write-Host "[-] Running on PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor), this is not a PowerShell version that the current script is supporting" -ForegroundColor Red
+            }
         } elseif (($NewMachineName -eq $null) -or ($NewMachineName -eq "")) {
             $Form1.Controls.Remove($labelResult0)
             $Form1.Controls.Remove($labelResult1)
@@ -169,7 +174,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create Cancel button
     $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Location = New-Object System.Drawing.Point(110,100)
+    $cancelButton.Location = New-Object System.Drawing.Point(110,120)
     $cancelButton.Size = New-Object System.Drawing.Size(75,23)
     $cancelButton.Text = "Cancel"
     $cancelButton.DialogResult = 1
