@@ -116,26 +116,19 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
             # Fully disable WinRM configuration
             Clear-WinRMConfiguration
+            $progressBar.Value = 15
 
             # Enable WinRM over HTTPS
             $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
             Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
-            $progressBar.Value = 15
-
-            # Rename new DNS computer Name 
-            Rename-DnsForNewComputerName -NewComputerName $NewMachineName -DomainName $DomainName
-            $progressBar.Value = 35
+            $progressBar.Value = 30
 
             # Rename a specific topology AD object 
             Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
-            $progressBar.Value = 50
+            $progressBar.Value = 60
 
             # Rename Spns with the computer name
             Rename-SPNs -NewComputerName $NewMachineName
-            $progressBar.Value = 60
-
-            # Remove old DNS Entries
-            Remove-DnsEntries -ComputerName $CurrentName
             $progressBar.Value = 70
 
             # Remove old Certificates
