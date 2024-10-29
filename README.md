@@ -86,5 +86,5 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
 ```
 
 ### 4) On error
-Nothing for now, please report me errors if you have one.
-
+Please report me errors if you have one.
+If you have an error about the powershell version about Get-ADDomain and that you are on a Windows Server 2012 R2, please download & install : https://aka.ms/WMF5Download 
