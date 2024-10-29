@@ -44,7 +44,7 @@ For the task scheduler part :
 The full script that is used here is (to have logs visibility) :
 Action : Start a Program
 Program/Script : C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool\Rename-DC-Tool.ps1 -WindowStyle Hidden
+Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool\Windows Server 2016\Rename-DC-Tool.ps1 -WindowStyle Hidden
 
 The full script that is used here is (to NOT HAVE logs visibility) :
 Action : Start a Program
