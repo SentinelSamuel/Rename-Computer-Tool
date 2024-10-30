@@ -391,23 +391,19 @@ function Enable-LDAPS {
         # Define the file path for the exported certificate
         $exportFilePath = Join-Path -Path $ExportPath -ChildPath "ldaps.pfx"
         Export-PfxCertificate -Cert $certPath -FilePath $exportFilePath -Password $CertPassword
-        Write-Host "[+] Certificate exported to: $exportFilePath" -ForegroundColor Green
         # Verify if the certificate file exists
         if (Test-Path -Path $exportFilePath) {
             Write-Host "[+] Certificate file created successfully at $exportFilePath." -ForegroundColor Green
         } else {
             Write-Host "[-] Certificate file was not created successfully." -ForegroundColor Red
-            return
         }
         # Save the generated password to the specified file
         $randomPassword | Out-File -FilePath $FilePath -Force
-        Write-Host "[+] Password saved to: $FilePath" -ForegroundColor Green
         # Verify if the password file exists
         if (Test-Path -Path $FilePath) {
             Write-Host "[+] Password file created successfully at $FilePath." -ForegroundColor Green
         } else {
             Write-Host "[-] Password file was not created successfully." -ForegroundColor Red
-            return
         }
         # Bind the certificate to LDAPS (port 636) if not already bound
         $bindingCheck = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapsslport" -ErrorAction SilentlyContinue
