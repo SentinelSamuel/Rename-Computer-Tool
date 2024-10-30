@@ -72,14 +72,14 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
     # Create LabelResult0
     $labelResult0 = New-Object System.Windows.Forms.Label
-    $labelResult0.Location = New-Object System.Drawing.Point(20,130)
+    $labelResult0.Location = New-Object System.Drawing.Point(20,150)
     $labelResult0.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
     $labelResult0.Size = New-Object System.Drawing.Size(500,25)
     $labelResult0.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 
     # Create LabelResult1
     $labelResult1 = New-Object System.Windows.Forms.Label
-    $labelResult1.Location = New-Object System.Drawing.Point(20,190)
+    $labelResult1.Location = New-Object System.Drawing.Point(20,210)
     $labelResult1.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
     $labelResult1.Size = New-Object System.Drawing.Size(500,50)
     $labelResult1.BorderStyle = [System.Windows.Forms.BorderStyle]::None
@@ -104,7 +104,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
 
                 # Create progress bar
                 $progressBar = New-Object System.Windows.Forms.ProgressBar
-                $progressBar.Location = New-Object System.Drawing.Point(20,160)
+                $progressBar.Location = New-Object System.Drawing.Point(20,180)
                 $progressBar.Size = New-Object System.Drawing.Size(500, 20)
                 $progressBar.ForeColor = "DarkViolet"
                 $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
@@ -116,31 +116,31 @@ if(!(Test-Path "C:\old_computername.txt")) {
                 $DomainName = (Get-ADDomain).DNSRoot
                 $DnsName = "$NewMachineName.$DomainName"
 
+                # Remove old Certificates
+                Remove-CertificatesByComputerName -ComputerName $CurrentName
+                $progressBar.Value = 10
+
                 # Fully disable WinRM configuration
                 Clear-WinRMConfiguration
-                $progressBar.Value = 10
+                $progressBar.Value = 30
 
                 # Enable WinRM over HTTPS
                 $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
                 Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
-                $progressBar.Value = 40
+                $progressBar.Value = 50
 
                 # Rename a specific topology AD object 
                 Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
-                $progressBar.Value = 60
+                $progressBar.Value = 70
 
                 # Rename Spns with the computer name
                 Rename-SPNs -NewComputerName $NewMachineName
-                $progressBar.Value = 70
-
-                # Remove old Certificates
-                Remove-CertificatesByComputerName -ComputerName $CurrentName
                 $progressBar.Value = 80
 
                 # Enable LDAPS & disable LDAP
                 $LDAPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "LDAPS-Cert.txt"
                 Enable-LDAPS -DnsName $DnsName -DisableLDAP $true -ExportPath $PSScriptRoot -FilePath $LDAPS_CERT
-                $progressBar.Value = 90
+                $progressBar.Value = 95
 
                 # Restart the computer
                 Rename-Computer -NewName $NewMachineName -PassThru -Restart
