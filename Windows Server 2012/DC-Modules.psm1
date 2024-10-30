@@ -365,13 +365,11 @@ function Enable-LDAPS {
 
         # Save the generated password to the specified file
         $randomPassword | Out-File -FilePath $FilePath -Force
-        Write-Host "[+] Password saved to: $FilePath" -ForegroundColor Green
         # Verify if the password file exists
         if (Test-Path -Path $FilePath) {
             Write-Host "[+] Password file created successfully at $FilePath." -ForegroundColor Green
         } else {
             Write-Host "[-] Password file was not created successfully." -ForegroundColor Red
-            return
         }
         # Bind the certificate to LDAPS (port 636) if not already bound
         $bindingCheck = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapsslport" -ErrorAction SilentlyContinue
