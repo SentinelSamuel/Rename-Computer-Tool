@@ -337,21 +337,6 @@ function Enable-LDAPS {
     }
     try {
         Write-Host "[i] Starting LDAPS configuration process..." -ForegroundColor Blue
-        # Check for an existing certificate in the Personal store
-        $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -match $DnsName }
-        if ($existingCert) {
-            Write-Host "[i] Certificate with DNS name $DnsName already exists in the Personal store. Removing existing certificate..." -ForegroundColor Blue
-            Remove-Item -Path "Cert:\LocalMachine\My\$($existingCert.Thumbprint)" -Force
-            Write-Host "[+] Existing certificate removed from Personal store." -ForegroundColor Green
-        }
-
-        # Check for an existing certificate in the Trusted Root store
-        $trustedRootCert = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -match $DnsName }
-        if ($trustedRootCert) {
-            Write-Host "[i] Certificate with DNS name $DnsName already exists in the Trusted Root store. Removing existing certificate..." -ForegroundColor Blue
-            Remove-Item -Path "Cert:\LocalMachine\Root\$($trustedRootCert.Thumbprint)" -Force
-            Write-Host "[+] Existing certificate removed from Trusted Root store." -ForegroundColor Green
-        }
 
         # Generate a new self-signed certificate for LDAPS
         Write-Host "[i] Creating a self-signed certificate for $DnsName..." -ForegroundColor Blue
