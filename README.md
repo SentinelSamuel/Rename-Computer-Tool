@@ -19,6 +19,11 @@
 
 ### 1) To launch the tool
 ```
+git clone https://github.com/SentinelSamuel/Rename-Computer-Tool.git
+Install-Module -Name Carbon -RequiredVersion 2.10.2 # https://www.powershellgallery.com/packages/carbon/2.10.2
+```
+
+```
 If the machine is already in a domain, his DC has to be up so the computer can call his DC for a double-check
 Then, launch the 'launch.ps1'
 
