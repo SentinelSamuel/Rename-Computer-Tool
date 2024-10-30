@@ -96,3 +96,4 @@ Everything also work using : "C:\Program Files\PowerShell\7\pwsh.exe"
 ### 4) On error
 Please report me errors if you have one.
 If you have an error about the powershell version about Get-ADDomain and that you are on a Windows Server 2012 R2, please download & install : https://aka.ms/WMF5Download 
+Btw : The Windows Server 2012 R2 is not exporting the WinRM self signed certificate (but is creating it of course)
