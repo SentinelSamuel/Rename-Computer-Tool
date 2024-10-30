@@ -20,7 +20,6 @@
 ### 1) Install & Launch the tool
 ```
 git clone https://github.com/SentinelSamuel/Rename-Computer-Tool.git
-Install-Module -Name Carbon -RequiredVersion 2.10.2 # https://www.powershellgallery.com/packages/carbon/2.10.2
 ```
 
 ```
