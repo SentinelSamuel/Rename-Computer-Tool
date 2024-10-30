@@ -243,8 +243,9 @@ function Rename-DFSRTopology {
         [Parameter(Mandatory = $true, HelpMessage = "Enter the new computer name.")]
         [string]$NewComputerName
     )
-    Import-Module ActiveDirectory -ErrorAction Stop
     try {
+        # Import the Active Directory module
+        Import-Module ActiveDirectory -ErrorAction Stop
         # Get the domain DN dynamically
         $domainDN = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()).GetDirectoryEntry().DistinguishedName
         $dfsrDN = "CN=DFSR-GlobalSettings,CN=System,$domainDN"
@@ -336,16 +337,25 @@ function Enable-LDAPS {
     }
     try {
         Write-Host "[i] Starting LDAPS configuration process..." -ForegroundColor Blue
-        # Check if a certificate with the same DNS name already exists
+        # Check for an existing certificate in the Personal store
         $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -match $DnsName }
         if ($existingCert) {
-            Write-Host "[i] Certificate with DNS name $DnsName already exists. Removing existing certificate..." -ForegroundColor Blue
+            Write-Host "[i] Certificate with DNS name $DnsName already exists in the Personal store. Removing existing certificate..." -ForegroundColor Blue
             Remove-Item -Path "Cert:\LocalMachine\My\$($existingCert.Thumbprint)" -Force
-            Write-Host "[+] Existing certificate removed." -ForegroundColor Green
+            Write-Host "[+] Existing certificate removed from Personal store." -ForegroundColor Green
         }
+
+        # Check for an existing certificate in the Trusted Root store
+        $trustedRootCert = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -match $DnsName }
+        if ($trustedRootCert) {
+            Write-Host "[i] Certificate with DNS name $DnsName already exists in the Trusted Root store. Removing existing certificate..." -ForegroundColor Blue
+            Remove-Item -Path "Cert:\LocalMachine\Root\$($trustedRootCert.Thumbprint)" -Force
+            Write-Host "[+] Existing certificate removed from Trusted Root store." -ForegroundColor Green
+        }
+
         # Generate a new self-signed certificate for LDAPS
         Write-Host "[i] Creating a self-signed certificate for $DnsName..." -ForegroundColor Blue
-        $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -KeySpec KeyExchange
+        $cert = New-SelfSignedCertificate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My
         # Export the certificate to a .pfx file using a secure password
         $thumbprint = $cert.Thumbprint
         $certPath = "Cert:\LocalMachine\My\$thumbprint"
@@ -368,17 +378,6 @@ function Enable-LDAPS {
             Write-Host "[-] Error adding certificate to Trusted Root: $_" -ForegroundColor Red
         }
 
-        # Define the file path for the exported certificate
-        $exportFilePath = Join-Path -Path $ExportPath -ChildPath "ldaps.pfx"
-        Export-PfxCertificate -Cert $certPath -FilePath $exportFilePath -Password $CertPassword
-        Write-Host "[+] Certificate exported to: $exportFilePath" -ForegroundColor Green
-        # Verify if the certificate file exists
-        if (Test-Path -Path $exportFilePath) {
-            Write-Host "[+] Certificate file created successfully at $exportFilePath." -ForegroundColor Green
-        } else {
-            Write-Host "[-] Certificate file was not created successfully." -ForegroundColor Red
-            return
-        }
         # Save the generated password to the specified file
         $randomPassword | Out-File -FilePath $FilePath -Force
         Write-Host "[+] Password saved to: $FilePath" -ForegroundColor Green
