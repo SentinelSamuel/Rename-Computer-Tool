@@ -96,4 +96,4 @@ Everything also work on Windows Server 2016 (BUT NOT ON WINDOWS SERVER 2012) usi
 ### 4) On error
 Please report me errors if you have one.
 If you have an error about the powershell version about Get-ADDomain and that you are on a Windows Server 2012 R2, please download & install : https://aka.ms/WMF5Download 
-Btw : The Windows Server 2012 R2 is not exporting the WinRM self signed certificate (but is creating it of course)
+Btw : The Windows Server 2012 R2 is not exporting the WinRM HTTPS & LDAPS self signed certificate (but is creating it of course)
