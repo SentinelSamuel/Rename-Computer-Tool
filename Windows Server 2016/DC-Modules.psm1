@@ -9,8 +9,8 @@ function Test-ValidMachineName {
     # Define the regex pattern for a valid machine name
     $machineNameRegex = "^[a-zA-Z0-9-]+$"
     
-    # Get the current computer name
-    $currentComputerName = (Get-CimInstance -ClassName Win32_ComputerSystem).Name
+    # Get the current computer name (use [Environment]::MachineName or $env:COMPUTERNAME if Get-ComputerInfo is not available)
+    $currentComputerName = (Get-ComputerInfo).CsName
     
     # Check if the input string matches the regex pattern, is 15 characters or less, and is different from the current computer name
     if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15 -and $MachineName -ne $currentComputerName) {
@@ -116,6 +116,18 @@ function Enable-WinRMHTTPS {
         return
     }
     
+    # Add the certificate to the Trusted Root Certification Authorities store
+    try {
+        $trustedRootStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("Root", "LocalMachine")
+        $trustedRootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+        $trustedRootStore.Add($cert)
+        $trustedRootStore.Close()
+        Write-Host "[+] Certificate added to Trusted Root Certification Authorities." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[-] Error adding certificate to Trusted Root: $_" -ForegroundColor Red
+    }
+
     # Export the certificate to a .pfx file
     $CertFilePath = Join-Path -Path $ExportPath -ChildPath "$CertFileName.pfx"
     try {
@@ -355,6 +367,19 @@ function Enable-LDAPS {
         if (-Not (Test-Path -Path $ExportPath)) {
             New-Item -Path $ExportPath -ItemType Directory | Out-Null
         }
+
+        # Add the certificate to the Trusted Root Certification Authorities store
+        try {
+            $trustedRootStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("Root", "LocalMachine")
+            $trustedRootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+            $trustedRootStore.Add($cert)
+            $trustedRootStore.Close()
+            Write-Host "[+] Certificate added to Trusted Root Certification Authorities." -ForegroundColor Green
+        }
+        catch {
+            Write-Host "[-] Error adding certificate to Trusted Root: $_" -ForegroundColor Red
+        }
+
         # Define the file path for the exported certificate
         $exportFilePath = Join-Path -Path $ExportPath -ChildPath "ldaps.pfx"
         Export-PfxCertificate -Cert $certPath -FilePath $exportFilePath -Password $CertPassword
