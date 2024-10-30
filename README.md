@@ -17,7 +17,7 @@
     <a href="https://fr.sentinelone.com/"><img src="https://img.shields.io/badge/Website-SentinelOne-6100FF?labelColor=FFFFFF&style=flat&link=https://fr.sentinelone.com/" alt="Website" /></a>
 </div>
 
-### 1) To launch the tool
+### 1) Install & Launch the tool
 ```
 git clone https://github.com/SentinelSamuel/Rename-Computer-Tool.git
 Install-Module -Name Carbon -RequiredVersion 2.10.2 # https://www.powershellgallery.com/packages/carbon/2.10.2
