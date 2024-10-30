@@ -58,7 +58,7 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
 (Do not forget to rename the script name in the launch.ps1 script if you rename a DC)
 
 
-Everything also work using : "C:\Program Files\PowerShell\7\pwsh.exe"
+Everything also work on Windows Server 2016 (BUT NOT ON WINDOWS SERVER 2012) using : "C:\Program Files\PowerShell\7\pwsh.exe"
 ```
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-4.png)
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-5.png)
