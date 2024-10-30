@@ -28,6 +28,10 @@ If the machine is already in a domain, his DC has to be up so the computer can c
 Then, launch the 'launch.ps1'
 
 Tips :
+ - Windows Server 2012 : PowerShell 5.1
+
+ - Windows Server 2016 : PowerShell 7.X
+
  - You can create a .lnk to the launch.ps1 to make it easier to launch
 
  - You can change the default application used on a double click of a .ps1 to allow users to launch a .ps1 just double-clicking on it
