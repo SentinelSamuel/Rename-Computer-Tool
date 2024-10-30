@@ -27,9 +27,6 @@ If the machine is already in a domain, his DC has to be up so the computer can c
 Then, launch the 'launch.ps1'
 
 Tips :
- - Windows Server 2012 : PowerShell 5.1
-
- - Windows Server 2016 : PowerShell 7.X
 
  - You can create a .lnk to the launch.ps1 to make it easier to launch
 
@@ -60,8 +57,6 @@ Program/Script : C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
 Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool\launch.ps1 -WindowStyle Hidden
 (Do not forget to rename the script name in the launch.ps1 script if you rename a DC)
 
-
-Everything also work on Windows Server 2016 (BUT NOT ON WINDOWS SERVER 2012) using : "C:\Program Files\PowerShell\7\pwsh.exe"
 ```
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-4.png)
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/TaskScheduler-5.png)
