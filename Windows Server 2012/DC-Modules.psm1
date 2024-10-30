@@ -243,9 +243,8 @@ function Rename-DFSRTopology {
         [Parameter(Mandatory = $true, HelpMessage = "Enter the new computer name.")]
         [string]$NewComputerName
     )
+    Import-Module ActiveDirectory -ErrorAction Stop
     try {
-        # Import the Active Directory module
-        Import-Module ActiveDirectory -ErrorAction Stop
         # Get the domain DN dynamically
         $domainDN = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()).GetDirectoryEntry().DistinguishedName
         $dfsrDN = "CN=DFSR-GlobalSettings,CN=System,$domainDN"
