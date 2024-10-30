@@ -4,7 +4,7 @@
 .NOTES
     By Samuel PAGES 
     Done : June 27th 2024
-    Rewritten : October 24th 2024 
+    Rewritten : October 30th 2024 
     Change launch.ps1 to launch this script
     Find the script : https://github.com/SentinelSamuel/Rename-Computer-Tool
 #>
@@ -94,7 +94,7 @@ if(!(Test-Path "C:\old_computername.txt")) {
     $okButton.Add_Click({    
         $NewMachineName = $textbox.Text
         Start-Transcript -Path "$PSScriptRoot\Rename-DC.log" -Force
-        if ($PSVersionTable.PSVersion.Major -ge 5 -and $PSVersionTable.PSVersion.Minor -ge 1) {
+        if ($PSVersionTable.PSVersion.Major -eq 5 -and $PSVersionTable.PSVersion.Minor -eq 1) {
             Write-Host "[+] Supported PowerShell Version $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)" -ForegroundColor Green
             if (Test-ValidMachineName -MachineName $NewMachineName) {
                 Set-Content "C:\old_computername.txt" -Value $CurrentName
@@ -150,8 +150,8 @@ if(!(Test-Path "C:\old_computername.txt")) {
                 $labelResult1.ForeColor = "Green"
                 $labelResult1.Text = "Machine name changed successfully."
                 $Form1.Controls.Add($labelResult1)
-            } elseif (($PSVersionTable.PSVersion.Major -eq 5 -and $PSVersionTable.PSVersion.Minor -lt 1) -or ($PSVersionTable.PSVersion.Major -le 4)) {
-                Write-Host "[-] Running on PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor), this is not a PowerShell version that the current script is supporting" -ForegroundColor Red
+            } else {
+                Write-Host "[-] Running on PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor), this IS NOT a PowerShell version that the current script is supporting" -ForegroundColor Red
             }
         } elseif (($NewMachineName -eq $null) -or ($NewMachineName -eq "")) {
             $Form1.Controls.Remove($labelResult0)
