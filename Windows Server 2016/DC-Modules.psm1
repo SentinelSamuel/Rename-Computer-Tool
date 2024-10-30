@@ -21,6 +21,60 @@ function Test-ValidMachineName {
 }
 
 <#
+.DESCRIPTION
+    Remove Certificates using computer name to filter
+#>
+function Remove-CertificatesByComputerName {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$ComputerName
+    )
+    # Define all possible certificate store locations
+    $certStores = @(
+        "Cert:\LocalMachine\My",
+        "Cert:\LocalMachine\CA",
+        "Cert:\LocalMachine\TrustedPeople",
+        "Cert:\LocalMachine\TrustedPublisher",
+        "Cert:\LocalMachine\Root",
+        "Cert:\CurrentUser\My",
+        "Cert:\CurrentUser\CA",
+        "Cert:\CurrentUser\TrustedPeople",
+        "Cert:\CurrentUser\TrustedPublisher",
+        "Cert:\CurrentUser\Root"
+    )
+    try {
+        $deletedCertsCount = 0
+        # Loop through each certificate store
+        foreach ($certStore in $certStores) {
+            # Get certificates from the current store
+            $certificates = Get-ChildItem -Path $certStore -ErrorAction SilentlyContinue
+            if ($certificates -ne $null) {
+                foreach ($cert in $certificates) {
+                    # Check if the certificate subject, issuer, or name contains the computer name
+                    if ($cert.Subject -like "*$ComputerName*" -or $cert.Issuer -like "*$ComputerName*" -or $cert.FriendlyName -like "*$ComputerName*") {
+                        Write-Host "Removing certificate from '$certStore': Subject = $($cert.Subject), Issuer = $($cert.Issuer), Thumbprint = $($cert.Thumbprint)" -ForegroundColor Yellow
+                        
+                        # Remove the certificate
+                        Remove-Item -Path "$certStore\$($cert.Thumbprint)" -Force
+                        $deletedCertsCount++
+                    }
+                }
+            } else {
+                Write-Host "No certificates found in store '$certStore'." -ForegroundColor Blue
+            }
+        }
+        # Provide feedback
+        if ($deletedCertsCount -gt 0) {
+            Write-Host "[+] $deletedCertsCount certificate(s) containing '$ComputerName' were removed." -ForegroundColor Green
+        } else {
+            Write-Host "[i] No certificates containing '$ComputerName' were found in any store." -ForegroundColor Blue
+        }
+    } catch {
+        Write-Error " [-] An error occurred while attempting to remove certificates. $_"
+    }
+}
+
+<#
 .SYNOPSIS
     Reset WinRM Configuration
 #>
@@ -224,60 +278,6 @@ function Rename-DFSRTopology {
 
 <#
 .DESCRIPTION
-    Remove Certificates using computer name to filter
-#>
-function Remove-CertificatesByComputerName {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$ComputerName
-    )
-    # Define all possible certificate store locations
-    $certStores = @(
-        "Cert:\LocalMachine\My",
-        "Cert:\LocalMachine\CA",
-        "Cert:\LocalMachine\TrustedPeople",
-        "Cert:\LocalMachine\TrustedPublisher",
-        "Cert:\LocalMachine\Root",
-        "Cert:\CurrentUser\My",
-        "Cert:\CurrentUser\CA",
-        "Cert:\CurrentUser\TrustedPeople",
-        "Cert:\CurrentUser\TrustedPublisher",
-        "Cert:\CurrentUser\Root"
-    )
-    try {
-        $deletedCertsCount = 0
-        # Loop through each certificate store
-        foreach ($certStore in $certStores) {
-            # Get certificates from the current store
-            $certificates = Get-ChildItem -Path $certStore -ErrorAction SilentlyContinue
-            if ($certificates -ne $null) {
-                foreach ($cert in $certificates) {
-                    # Check if the certificate subject, issuer, or name contains the computer name
-                    if ($cert.Subject -like "*$ComputerName*" -or $cert.Issuer -like "*$ComputerName*" -or $cert.FriendlyName -like "*$ComputerName*") {
-                        Write-Host "Removing certificate from '$certStore': Subject = $($cert.Subject), Issuer = $($cert.Issuer), Thumbprint = $($cert.Thumbprint)" -ForegroundColor Yellow
-                        
-                        # Remove the certificate
-                        Remove-Item -Path "$certStore\$($cert.Thumbprint)" -Force
-                        $deletedCertsCount++
-                    }
-                }
-            } else {
-                Write-Host "No certificates found in store '$certStore'." -ForegroundColor Blue
-            }
-        }
-        # Provide feedback
-        if ($deletedCertsCount -gt 0) {
-            Write-Host "[+] $deletedCertsCount certificate(s) containing '$ComputerName' were removed." -ForegroundColor Green
-        } else {
-            Write-Host "[i] No certificates containing '$ComputerName' were found in any store." -ForegroundColor Blue
-        }
-    } catch {
-        Write-Error " [-] An error occurred while attempting to remove certificates. $_"
-    }
-}
-
-<#
-.DESCRIPTION
     Rename SPNs if there is
 #>
 function Rename-SPNs {
@@ -348,12 +348,20 @@ function Enable-LDAPS {
     }
     try {
         Write-Host "[i] Starting LDAPS configuration process..." -ForegroundColor Blue
-        # Check if a certificate with the same DNS name already exists
+        # Check for an existing certificate in the Personal store
         $existingCert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -match $DnsName }
         if ($existingCert) {
-            Write-Host "[i] Certificate with DNS name $DnsName already exists. Removing existing certificate..." -ForegroundColor Blue
+            Write-Host "[i] Certificate with DNS name $DnsName already exists in the Personal store. Removing existing certificate..." -ForegroundColor Blue
             Remove-Item -Path "Cert:\LocalMachine\My\$($existingCert.Thumbprint)" -Force
-            Write-Host "[+] Existing certificate removed." -ForegroundColor Green
+            Write-Host "[+] Existing certificate removed from Personal store." -ForegroundColor Green
+        }
+
+        # Check for an existing certificate in the Trusted Root store
+        $trustedRootCert = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -match $DnsName }
+        if ($trustedRootCert) {
+            Write-Host "[i] Certificate with DNS name $DnsName already exists in the Trusted Root store. Removing existing certificate..." -ForegroundColor Blue
+            Remove-Item -Path "Cert:\LocalMachine\Root\$($trustedRootCert.Thumbprint)" -Force
+            Write-Host "[+] Existing certificate removed from Trusted Root store." -ForegroundColor Green
         }
         # Generate a new self-signed certificate for LDAPS
         Write-Host "[i] Creating a self-signed certificate for $DnsName..." -ForegroundColor Blue
