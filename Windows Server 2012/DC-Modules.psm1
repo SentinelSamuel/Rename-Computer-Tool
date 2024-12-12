@@ -200,8 +200,6 @@ function Enable-WinRMHTTPS {
     catch {
         Write-Host "[-] Failed to create WinRM HTTPS listener: $_" -ForegroundColor Red
     }
-    winrm delete winrm/config/Listener?Address=*+Transport=HTTP
-    Write-Host "[+] WinRM Over HTTP Disabled" -ForegroundColor Green
 
     # Check for existing firewall rule for WinRM HTTPS (port 5986), and add it if not present
     try {
@@ -216,6 +214,12 @@ function Enable-WinRMHTTPS {
     catch {
         Write-Host "[-] Error checking or creating firewall rule: $_" -ForegroundColor Red
     }
+}
+
+# Disable WinRM over HTTP
+function Disable-WinRMHTTP {
+    winrm delete winrm/config/Listener?Address=*+Transport=HTTP
+    Write-Host "[+] WinRM Over HTTP Disabled" -ForegroundColor Green
 
     # Remove firewall rule for WinRM over HTTP if it exists
     try {
@@ -396,36 +400,39 @@ function Enable-LDAPS {
                 Write-Error "[-] Failed to create firewall rule for LDAPS."
             }
         }
-        # Optionally disable LDAP (port 389)
-        if ($DisableLDAP) {
-            # Disable the LDAP TCP and UDP firewall rules
-            $ldapTcpRule = Get-NetFirewallRule -DisplayName "Active Directory Domain Controller - LDAP (TCP-In)" -ErrorAction SilentlyContinue
-            $ldapUdpRule = Get-NetFirewallRule -DisplayName "Active Directory Domain Controller - LDAP (UDP-In)" -ErrorAction SilentlyContinue
-            if ($ldapTcpRule -and $ldapTcpRule.Enabled) {
-                Disable-NetFirewallRule -Name $ldapTcpRule.Name
-                Write-Host "[+] Disabled LDAP (TCP port 389) firewall rule." -ForegroundColor Green
-            } else {
-                Write-Host "[i] LDAP (TCP port 389) firewall rule is already disabled." -ForegroundColor Blue
-            }
-            if ($ldapUdpRule -and $ldapUdpRule.Enabled) {
-                Disable-NetFirewallRule -Name $ldapUdpRule.Name
-                Write-Host "[+] Disabled LDAP (UDP port 389) firewall rule." -ForegroundColor Green
-            } else {
-                Write-Host "[i] LDAP (UDP port 389) firewall rule is already disabled." -ForegroundColor Blue
-            }
-            # Disable regular LDAP (port 389) in NTDS settings
-            $ldapPort = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapport" -ErrorAction SilentlyContinue
-            if ($ldapPort -and $ldapPort.ldapport -eq 0) {
-                Write-Host "[i] LDAP (port 389) is already disabled in NTDS settings." -ForegroundColor Blue
-            } else {
-                Write-Host "[i] Disabling regular LDAP (port 389) in NTDS settings..." -ForegroundColor Blue
-                New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapport" -Value 0 -PropertyType Dword -Force
-                Write-Host "[+] Regular LDAP (port 389) has been disabled in NTDS settings." -ForegroundColor Green
-            }
-        }
         Write-Host "[+] LDAPS configuration completed successfully." -ForegroundColor Green
     }
     catch {
         Write-Error "[-] An error occurred: $_"
+    }
+}
+
+# Disable LDAP
+function Disable-LDAP {
+    if ($DisableLDAP) {
+        # Disable the LDAP TCP and UDP firewall rules
+        $ldapTcpRule = Get-NetFirewallRule -DisplayName "Active Directory Domain Controller - LDAP (TCP-In)" -ErrorAction SilentlyContinue
+        $ldapUdpRule = Get-NetFirewallRule -DisplayName "Active Directory Domain Controller - LDAP (UDP-In)" -ErrorAction SilentlyContinue
+        if ($ldapTcpRule -and $ldapTcpRule.Enabled) {
+            Disable-NetFirewallRule -Name $ldapTcpRule.Name
+            Write-Host "[+] Disabled LDAP (TCP port 389) firewall rule." -ForegroundColor Green
+        } else {
+            Write-Host "[i] LDAP (TCP port 389) firewall rule is already disabled." -ForegroundColor Blue
+        }
+        if ($ldapUdpRule -and $ldapUdpRule.Enabled) {
+            Disable-NetFirewallRule -Name $ldapUdpRule.Name
+            Write-Host "[+] Disabled LDAP (UDP port 389) firewall rule." -ForegroundColor Green
+        } else {
+            Write-Host "[i] LDAP (UDP port 389) firewall rule is already disabled." -ForegroundColor Blue
+        }
+        # Disable regular LDAP (port 389) in NTDS settings
+        $ldapPort = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapport" -ErrorAction SilentlyContinue
+        if ($ldapPort -and $ldapPort.ldapport -eq 0) {
+            Write-Host "[i] LDAP (port 389) is already disabled in NTDS settings." -ForegroundColor Blue
+        } else {
+            Write-Host "[i] Disabling regular LDAP (port 389) in NTDS settings..." -ForegroundColor Blue
+            New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "ldapport" -Value 0 -PropertyType Dword -Force
+            Write-Host "[+] Regular LDAP (port 389) has been disabled in NTDS settings." -ForegroundColor Green
+        }
     }
 }
