@@ -140,75 +140,85 @@ if (!(Test-Path "C:\old_computername.txt")) {
         if ($PSVersionTable.PSVersion.Major -eq 5 -and $PSVersionTable.PSVersion.Minor -eq 1) {
             Write-Host "[+] Supported PowerShell Version $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)" -ForegroundColor Green
             if (Test-ValidMachineName -MachineName $NewMachineName) {
-                Set-Content "C:\old_computername.txt" -Value $CurrentName
-                $labelResult0.ForeColor = "DarkViolet"
-                $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
-                $Form1.Controls.Add($labelResult0)
+                if (($checkboxLDAP.checked) -and (-not $checkboxLDAPS.checked)) {
+                    $Form1.Controls.Remove($labelResult1)
+                    $Form1.Controls.Remove($progressBar)
+                    $Form1.Update()
+                    $labelResult1.ForeColor = "Red"
+                    $labelResult1.Text = "You cannot disable LDAP if you don't enable LDAPS"
+                    $Form1.Controls.Add($labelResult1)
+                } else {
+                    Set-Content "C:\old_computername.txt" -Value $CurrentName
+                    $labelResult0.ForeColor = "DarkViolet"
+                    $labelResult0.Text = "Changing computer name, and will restart after it... (from $CurrentName to $NewMachineName)"
+                    $Form1.Controls.Add($labelResult0)
 
-                # Create progress bar
-                $progressBar = New-Object System.Windows.Forms.ProgressBar
-                $progressBar.Location = New-Object System.Drawing.Point(20, 230)
-                $progressBar.Size = New-Object System.Drawing.Size(500, 20)
-                $progressBar.ForeColor = "DarkViolet"
-                $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
-                $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
-                $Form1.Controls.Add($progressBar)
+                    # Create progress bar
+                    $progressBar = New-Object System.Windows.Forms.ProgressBar
+                    $progressBar.Location = New-Object System.Drawing.Point(20, 230)
+                    $progressBar.Size = New-Object System.Drawing.Size(500, 20)
+                    $progressBar.ForeColor = "DarkViolet"
+                    $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
+                    $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
+                    $Form1.Controls.Add($progressBar)
 
-                # Simulate a progress bar
-                $progressBar.Value = 0
-                $DomainName = (Get-ADDomain).DNSRoot
-                $DnsName = "$NewMachineName.$DomainName"
+                    # Simulate a progress bar
+                    $progressBar.Value = 0
+                    $DomainName = (Get-ADDomain).DNSRoot
+                    $DnsName = "$NewMachineName.$DomainName"
 
-                # Remove old Certificates
-                Remove-CertificatesByComputerName -ComputerName $CurrentName
-                $progressBar.Value = 10
+                    # Remove old Certificates
+                    Remove-CertificatesByComputerName -ComputerName $CurrentName
+                    $progressBar.Value = 10
 
-                # Fully disable WinRM configuration
-                Clear-WinRMConfiguration
-                $progressBar.Value = 20
+                    # Fully disable WinRM configuration
+                    Clear-WinRMConfiguration
+                    $progressBar.Value = 20
 
-                # Enable WinRM over HTTPS if checkbox is checked
-                if ($checkboxWinRMHTTPS.Checked) {
-                    $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
-                    Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
+                    # Enable WinRM over HTTPS if checkbox is checked
+                    if ($checkboxWinRMHTTPS.Checked) {
+                        $WinRM_HTTPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "WinRM-HTTPS-Cert.txt"
+                        Enable-WinRMHTTPS -DnsName $DnsName -ExportPath $PSScriptRoot -CertFileName "WinRMCert" -PasswordFilePath $WinRM_HTTPS_CERT
+                    }
+                    $progressBar.Value = 30
+                    
+                    # Disable WinRM over HTTP
+                    if ($checkboxWinRMHTTP.Checked) {
+                        Disable-WinRMHTTP
+                    }
+                    $progressBar.Value = 50
+
+                    # Rename a specific topology AD object 
+                    Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
+                    $progressBar.Value = 60
+
+                    # Rename SPNs with the computer name
+                    Rename-SPNs -NewComputerName $NewMachineName
+                    $progressBar.Value = 70
+
+                    # Enable LDAPS
+                    if ($checkboxLDAPS.Checked) {
+                        $LDAPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "LDAPS-Cert.txt"
+                        Enable-LDAPS -DnsName $DnsName -ExportPath $PSScriptRoot -FilePath $LDAPS_CERT
+                    }
+                    $progressBar.Value = 80
+
+                    # Disable LDAP
+                    if ($checkboxLDAP.Checked) {
+                        Disable-LDAP
+                    }
+                    $progressBar.Value = 90
+
+                    # Restart the computer
+                    Rename-Computer -NewName $NewMachineName -PassThru -Restart
+                    $progressBar.Value = 100
+                    Stop-Transcript
+
+                    $labelResult1.ForeColor = "Green"
+                    $labelResult1.Text = "Machine name changed successfully."
+                    $Form1.Controls.Add($labelResult1)
                 }
-                $progressBar.Value = 30
-                
-                # Disable WinRM over HTTP
-                if ($checkboxWinRMHTTP.Checked) {
-                    Disable-WinRMHTTP
-                }
-                $progressBar.Value = 50
 
-                # Rename a specific topology AD object 
-                Rename-DFSRTopology -OldComputerName $CurrentName -NewComputerName $NewMachineName
-                $progressBar.Value = 60
-
-                # Rename SPNs with the computer name
-                Rename-SPNs -NewComputerName $NewMachineName
-                $progressBar.Value = 70
-
-                # Enable LDAPS
-                if ($checkboxLDAPS.Checked) {
-                    $LDAPS_CERT = Join-Path -Path $PSScriptRoot -ChildPath "LDAPS-Cert.txt"
-                    Enable-LDAPS -DnsName $DnsName -ExportPath $PSScriptRoot -FilePath $LDAPS_CERT
-                }
-                $progressBar.Value = 80
-
-                # Disable LDAP
-                if ($checkboxLDAP.Checked) {
-                    Disable-LDAP
-                }
-                $progressBar.Value = 90
-
-                # Restart the computer
-                Rename-Computer -NewName $NewMachineName -PassThru -Restart
-                $progressBar.Value = 100
-                Stop-Transcript
-
-                $labelResult1.ForeColor = "Green"
-                $labelResult1.Text = "Machine name changed successfully."
-                $Form1.Controls.Add($labelResult1)
             } elseif (($NewMachineName -eq $null) -or ($NewMachineName -eq "")) {
                 $Form1.Controls.Remove($labelResult0)
                 $Form1.Controls.Remove($labelResult1)
