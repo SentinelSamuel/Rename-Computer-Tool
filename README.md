@@ -65,7 +65,7 @@ Add Arguments (optional) : -ExecutionPolicy Bypass -File C:\Rename-Computer-Tool
 
 ### 2) Screenshots of the UI 
 
-![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App.png)
+![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/PowerShell-App-V2.png)
 ![image](https://github.com/SentinelSamuel/Rename-Computer-Tool/blob/main/Pictures/Script-Running.png)
 
 ### 3) Some Tips
