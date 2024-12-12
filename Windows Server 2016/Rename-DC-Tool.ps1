@@ -122,7 +122,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
 
     # Create LabelResult1
     $labelResult1 = New-Object System.Windows.Forms.Label
-    $labelResult1.Location = New-Object System.Drawing.Point(20, 210)
+    $labelResult1.Location = New-Object System.Drawing.Point(20, 240)
     $labelResult1.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
     $labelResult1.Size = New-Object System.Drawing.Size(500, 50)
     $labelResult1.BorderStyle = [System.Windows.Forms.BorderStyle]::None
@@ -161,7 +161,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
                     $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
                     $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
                     $Form1.Controls.Add($progressBar)
-
+                    
                     # Simulate a progress bar
                     $progressBar.Value = 0
                     $DomainName = (Get-ADDomain).DNSRoot
@@ -213,7 +213,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
                     Rename-Computer -NewName $NewMachineName -PassThru -Restart
                     $progressBar.Value = 100
                     Stop-Transcript
-
+                    
                     $labelResult1.ForeColor = "Green"
                     $labelResult1.Text = "Machine name changed successfully."
                     $Form1.Controls.Add($labelResult1)
@@ -242,7 +242,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
             $Form1.Controls.Remove($progressBar)
             $Form1.Update()
             $labelResult1.ForeColor = "Red"
-            $labelResult1.Text = "The PowerShell Version is not working with this script, please use " 
+            $labelResult1.Text = "The PowerShell Version is not working with this script, please use a newer version" 
             $Form1.Controls.Add($labelResult1)
         }
     })
