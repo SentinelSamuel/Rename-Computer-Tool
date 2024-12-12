@@ -18,6 +18,6 @@
 | Version | Supported          |
 | -------- | ------- |
 | >= PowerShell 7 | ❌ |
-| PowerShell 6.X | ❔ |
+| PowerShell 6.X | ❌ |
 | PowerShell 5.1 | :white_check_mark: |
 | < PowerShell 5.0  | ❌ |
