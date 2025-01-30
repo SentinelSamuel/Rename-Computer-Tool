@@ -27,7 +27,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
 
     $Form1 = New-Object System.Windows.Forms.Form
     $Form1.Text = "Machine Rename Tool"
-    $Form1.Size = New-Object System.Drawing.Size(600, 400)
+    $Form1.Size = New-Object System.Drawing.Size(600, 430)
     $Form1.ShowInTaskbar = $false
     $Form1.StartPosition = "CenterScreen"
     $Form1.MinimizeBox = $true
@@ -41,8 +41,8 @@ if (!(Test-Path "C:\old_computername.txt")) {
     $Form1.VerticalScroll.Enabled = $false
     $Form1.VerticalScroll.Visible = $false
     $Form1.Topmost = $true
-    $Form1.MaximumSize = "600,400"
-    $Form1.MinimumSize = "600,400"
+    $Form1.MaximumSize = "600,430"
+    $Form1.MinimumSize = "600,430"
     $Form1.SizeGripStyle = 2
     $Form1.Capture = $false
     $Form1.KeyPreview = $false
@@ -115,21 +115,21 @@ if (!(Test-Path "C:\old_computername.txt")) {
 
     # Create LabelResult0
     $labelResult0 = New-Object System.Windows.Forms.Label
-    $labelResult0.Location = New-Object System.Drawing.Point(20, 150)
+    $labelResult0.Location = New-Object System.Drawing.Point(310, 120)
     $labelResult0.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
-    $labelResult0.Size = New-Object System.Drawing.Size(500, 25)
+    $labelResult0.Size = New-Object System.Drawing.Size(200, 70)
     $labelResult0.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 
     # Create LabelResult1
     $labelResult1 = New-Object System.Windows.Forms.Label
-    $labelResult1.Location = New-Object System.Drawing.Point(20, 240)
+    $labelResult1.Location = New-Object System.Drawing.Point(20, 280)
     $labelResult1.Font = New-Object Drawing.Font("Microsoft Sans Serif", 9)
     $labelResult1.Size = New-Object System.Drawing.Size(500, 50)
     $labelResult1.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 
     # Create OK button
     $okButton = New-Object System.Windows.Forms.Button
-    $okButton.Location = New-Object System.Drawing.Point(20, 280)
+    $okButton.Location = New-Object System.Drawing.Point(20, 325)
     $okButton.Size = New-Object System.Drawing.Size(75, 23)
     $okButton.Cursor = [System.Windows.Forms.Cursors]::Hand
     $okButton.Text = "OK"
@@ -155,7 +155,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
 
                     # Create progress bar
                     $progressBar = New-Object System.Windows.Forms.ProgressBar
-                    $progressBar.Location = New-Object System.Drawing.Point(20, 230)
+                    $progressBar.Location = New-Object System.Drawing.Point(20, 250)
                     $progressBar.Size = New-Object System.Drawing.Size(500, 20)
                     $progressBar.ForeColor = "DarkViolet"
                     $progressBar.MarqueeAnimationSpeed = 30 # Animation Speed
@@ -210,7 +210,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
                     $progressBar.Value = 90
 
                     # Restart the computer
-                    Rename-Computer -NewName $NewMachineName -PassThru -Restart
+                    #Rename-Computer -NewName $NewMachineName -PassThru -Restart
                     $progressBar.Value = 100
                     Stop-Transcript
                     
@@ -249,7 +249,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
 
     # Create Cancel button
     $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Location = New-Object System.Drawing.Point(110, 280)
+    $cancelButton.Location = New-Object System.Drawing.Point(110, 325)
     $cancelButton.Size = New-Object System.Drawing.Size(75, 23)
     $cancelButton.Text = "Cancel"
     $cancelButton.DialogResult = 1
