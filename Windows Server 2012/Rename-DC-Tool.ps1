@@ -210,7 +210,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
                     $progressBar.Value = 90
 
                     # Restart the computer
-                    #Rename-Computer -NewName $NewMachineName -PassThru -Restart
+                    Rename-Computer -NewName $NewMachineName -PassThru -Restart
                     $progressBar.Value = 100
                     Stop-Transcript
                     
