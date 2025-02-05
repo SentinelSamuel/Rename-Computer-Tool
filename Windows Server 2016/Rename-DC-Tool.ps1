@@ -210,6 +210,14 @@ if (!(Test-Path "C:\old_computername.txt")) {
                     }
                     $progressBar.Value = 90
 
+                    # New Renaming Process
+                    # https://www.dell.com/support/kbdoc/fr-fr/000226230/windows-server-how-to-properly-rename-an-active-directory-domain-controller
+                    # Supported for : 
+                    # Microsoft Windows Server 2016, 
+                    # Microsoft Windows Server 2019, 
+                    # Microsoft Windows Server 2022, 
+                    # Microsoft Windows 2012 Server, 
+                    # Microsoft Windows 2012 Server R2
                     # Adding a new Name
                     netdom computername "$OldDnsName" /add:"$NewDnsName"
                     # Enumerate DC Names
