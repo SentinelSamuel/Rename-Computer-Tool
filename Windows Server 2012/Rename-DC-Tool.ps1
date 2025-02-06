@@ -84,7 +84,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
     $LabelCheckboxWinRMHTTPS.Size = New-Object System.Drawing.Size(250, 25)
     $LabelCheckboxWinRMHTTPS.AutoSize = $false
 
-    # Create checkbox to Disable LDAP
+    <# Create checkbox to Disable LDAP
     $checkboxLDAP = New-Object System.Windows.Forms.CheckBox
     $checkboxLDAP.Location = New-Object System.Drawing.Point(20, 180)
     $checkboxLDAP.Size = New-Object System.Drawing.Size(20, 20)
@@ -105,7 +105,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
     $LabelCheckboxLDAPS.Location = New-Object System.Drawing.Point(40, 213)
     $LabelCheckboxLDAPS.Size = New-Object System.Drawing.Size(250, 25)
     $LabelCheckboxLDAPS.AutoSize = $false
-
+    #>
     # Add picture
     $imagePath = "$PSScriptRoot\S1_Logo_Shield_RGB_PURP.png"
     $picturebox = New-Object Windows.Forms.PictureBox
@@ -209,14 +209,29 @@ if (!(Test-Path "C:\old_computername.txt")) {
                     }
                     $progressBar.Value = 90
 
-                    # Restart the computer
-                    Rename-Computer -NewName $NewMachineName -PassThru -Restart
+                    # New Renaming Process
+                    # https://www.dell.com/support/kbdoc/fr-fr/000226230/windows-server-how-to-properly-rename-an-active-directory-domain-controller
+                    # Supported for : 
+                    # Microsoft Windows Server 2016, 
+                    # Microsoft Windows Server 2019, 
+                    # Microsoft Windows Server 2022, 
+                    # Microsoft Windows 2012 Server, 
+                    # Microsoft Windows 2012 Server R2
+                    # Adding a new Name
+                    netdom computername "$OldDnsName" /add:"$NewDnsName"
+                    # Enumerate DC Names
+                    netdom computername "$OldDnsName" /enumerate
+                    # Make the new name as primary name
+                    netdom computername "$OldDnsName" /makeprimary:"$NewDnsName"
                     $progressBar.Value = 100
                     Stop-Transcript
                     
                     $labelResult1.ForeColor = "Green"
                     $labelResult1.Text = "Machine name changed successfully."
                     $Form1.Controls.Add($labelResult1)
+                    
+                    # Restart Computer
+                    Restart-Computer -Force
                 }
 
             } elseif (($NewMachineName -eq $null) -or ($NewMachineName -eq "")) {
