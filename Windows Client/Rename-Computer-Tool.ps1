@@ -2,21 +2,46 @@
 # Done : December 4th 2023
 
 if(!(Test-Path "C:\old_computername.txt")) {
-
+	<#
+	.DESCRIPTION
+	    Validate the new Machine Name
+	    Explanation:
+	    ^ → Start of string.
+	    (?!-) → Ensures the name does not start with -.
+	    (?!.*-$) → Ensures the name does not end with -.
+	    [A-Za-z0-9] → The name must start with a letter or number.
+	    [A-Za-z0-9-]{0,13} → Allows letters, numbers, and hyphens in between (up to 15 characters total).
+	    [A-Za-z0-9]$ → The name must end with a letter or number.
+	    $ → End of string.
+	
+	    Valid Matches:
+	    ✅ PC01
+	    ✅ Server-01
+	    ✅ worKstation-Test
+	    ✅ A-Valid-Name
+	    
+	    Invalid Matches:
+	    ❌ -Server (starts with -)
+	    ❌ Server- (ends with -)
+	    ❌ Invalid_Name (contains _)
+	    ❌ 1234567890123456 (too long, 16 characters)
+	#>
 	function Test-ValidMachineName {
-		param (
-			[string]$MachineName
-		)
-
-		# Define the regex pattern for a valid machine name
-		$machineNameRegex = "^[a-zA-Z0-9-]+$"
-
-		# Check if the input string matches the regex pattern and is 15 characters or less
-		if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15) {
-			return $true
-		} else {
-			return $false
-		}
+	    param (
+	        [string]$MachineName
+	    )
+	    # Define the regex pattern for a valid machine name
+	    $machineNameRegex = "^(?!-)(?!.*-$)[A-Za-z0-9][A-Za-z0-9-]{0,13}[A-Za-z0-9]$"
+	    
+	    # Get the current computer name (use [Environment]::MachineName or $env:COMPUTERNAME if Get-ComputerInfo is not available)
+	    $currentComputerName = [Environment]::MachineName
+	    
+	    # Check if the input string matches the regex pattern, is 15 characters or less, and is different from the current computer name
+	    if ($MachineName -match $machineNameRegex -and $MachineName.Length -le 15 -and $MachineName -ne $currentComputerName) {
+	        return $true
+	    } else {
+	        return $false
+	    }
 	}
 
     $CurrentName = $env:COMPUTERNAME
