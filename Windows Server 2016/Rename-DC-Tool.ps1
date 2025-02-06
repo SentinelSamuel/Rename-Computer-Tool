@@ -84,7 +84,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
     $LabelCheckboxWinRMHTTPS.Size = New-Object System.Drawing.Size(250, 25)
     $LabelCheckboxWinRMHTTPS.AutoSize = $false
 
-    # Create checkbox to Disable LDAP
+    <# Create checkbox to Disable LDAP
     $checkboxLDAP = New-Object System.Windows.Forms.CheckBox
     $checkboxLDAP.Location = New-Object System.Drawing.Point(20, 180)
     $checkboxLDAP.Size = New-Object System.Drawing.Size(20, 20)
@@ -105,7 +105,7 @@ if (!(Test-Path "C:\old_computername.txt")) {
     $LabelCheckboxLDAPS.Location = New-Object System.Drawing.Point(40, 213)
     $LabelCheckboxLDAPS.Size = New-Object System.Drawing.Size(250, 25)
     $LabelCheckboxLDAPS.AutoSize = $false
-
+    #>
     # Add picture
     $imagePath = "$PSScriptRoot\S1_Logo_Shield_RGB_PURP.png"
     $picturebox = New-Object Windows.Forms.PictureBox
@@ -295,4 +295,17 @@ if (!(Test-Path "C:\old_computername.txt")) {
 
     # Dispose of the form
     $Form1.Dispose()
+}
+else  { 
+    $CurrentFQDN = $env:COMPUTERNAME
+    $DomainName = (Get-ADDomain).DNSRoot
+    $OldFQDN = "$(Get-Content 'C:\old_computername.txt').$DomainName"
+
+    $Enumerate = netdom computername "$CurrentFQDN" /enumerate
+    if($Enumerate -contains "$OldFQDN") {
+        netdom computername "$CurrentFQDN" /remove:$OldFQDN
+    }
+    else {
+        exit(0)
+    }
 }
