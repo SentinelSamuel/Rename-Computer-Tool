@@ -280,3 +280,16 @@ if (!(Test-Path "C:\old_computername.txt")) {
     # Dispose of the form
     $Form1.Dispose()
 }
+else  { 
+    $CurrentFQDN = $env:COMPUTERNAME
+    $DomainName = (Get-ADDomain).DNSRoot
+    $OldFQDN = "$(Get-Content 'C:\old_computername.txt').$DomainName"
+
+    $Enumerate = netdom computername "$CurrentFQDN" /enumerate
+    if($Enumerate -contains "$OldFQDN") {
+        netdom computername "$CurrentFQDN" /remove:$OldFQDN
+    }
+    else {
+        exit(0)
+    }
+}
