@@ -23,8 +23,6 @@ git clone https://github.com/SentinelSamuel/Rename-Computer-Tool.git
 ```
 
 ```
-If the machine is already in a domain, his DC has to be up so the computer can call his DC for a double-check
-Then, launch the 'launch.ps1'
 
 Tips :
 
